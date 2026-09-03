@@ -70,7 +70,6 @@ export default function Signup({ onSignIn }) {
         { withCredentials: true }
       );
 
-      // Registration auto-sends an OTP to the user's email — open the modal to collect it.
       setOtpOpen(true);
     } catch (err) {
       setApiError(
