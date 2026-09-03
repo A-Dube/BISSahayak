@@ -1,15 +1,43 @@
+import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-export async function login({ email, password }) {
-  const { data } = await api.post("/auth/login", { email, password });
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export async function register({ fullName, email, password }) {
+  const { data } = await api.post("/auth/register", { fullName, email, password });
   if (data.accessToken) {
     localStorage.setItem("bis_access_token", data.accessToken);
   }
   return data;
 }
 
-export async function register({ email, password, name }) {
-  const { data } = await api.post("/auth/register", { email, password, name });
+export async function verifyEmail({ email, otp }) {
+  const { data } = await api.post("/auth/verify-email", { email, otp });
+  if (data.accessToken) {
+    localStorage.setItem("bis_access_token", data.accessToken);
+  }
+  return data;
+}
+
+export async function resendOtp({ fullName, email, password }) {
+  const { data } = await api.post("/auth/register", { fullName, email, password });
+  return data;
+}
+
+export async function login({ email, password }) {
+  const { data } = await api.post("/auth/login", { email, password });
   if (data.accessToken) {
     localStorage.setItem("bis_access_token", data.accessToken);
   }
@@ -22,7 +50,7 @@ export async function getCurrentUser() {
 }
 
 export async function refreshToken() {
-  const { data } = await api.get("/auth/refresh-token");
+  const { data } = await api.post("/auth/refresh-token");
   if (data.accessToken) {
     localStorage.setItem("bis_access_token", data.accessToken);
   }
@@ -30,18 +58,13 @@ export async function refreshToken() {
 }
 
 export async function logout() {
-  await api.get("/auth/logout");
+  await api.post("/auth/logout");
   localStorage.removeItem("bis_access_token");
 }
 
 export async function logoutAll() {
-  await api.get("/auth/logout-all");
+  await api.post("/auth/logout-all");
   localStorage.removeItem("bis_access_token");
-}
-
-export async function verifyEmail() {
-  const { data } = await api.get("/auth/verify-email");
-  return data;
 }
 
 export function getToken() {
@@ -51,3 +74,5 @@ export function getToken() {
 export function isAuthenticated() {
   return !!getToken();
 }
+
+export default api;
