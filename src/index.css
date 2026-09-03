@@ -1,4 +1,32 @@
 @import "tailwindcss";
+@theme {
+  --animate-blob: blob 16s infinite alternate ease-in-out;
+  --animate-blob-slow: blob-reverse 22s infinite alternate ease-in-out;
+
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    50% {
+      transform: translate(45px, -55px) scale(1.18);
+    }
+    100% {
+      transform: translate(-35px, 35px) scale(0.92);
+    }
+  }
+
+  @keyframes blob-reverse {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    50% {
+      transform: translate(-50px, 40px) scale(1.12);
+    }
+    100% {
+      transform: translate(40px, -45px) scale(0.9);
+    }
+  }
+}
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;

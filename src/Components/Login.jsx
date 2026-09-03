@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { ShieldCheck, ExternalLink, Eye, EyeOff } from "lucide-react";
 import bisLogo from "../assets/BIS logo.png";
+import { login } from "../services/authService";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
-
-const API_BASE_URL = "https://backend-fkpu.onrender.com/api";
 
 export default function Login({ onSignUp }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +21,7 @@ export default function Login({ onSignUp }) {
 
     if (!email.trim()) {
       next.email = "Email address is required.";
-    } else if (!EMAIL_PATTERN.test(email)) {
+    } else if (!EMAIL_PATTERN.test(email.trim())) {
       next.email = "Enter a valid email address.";
     }
 
@@ -41,27 +40,28 @@ export default function Login({ onSignUp }) {
   const handleSignIn = async (e) => {
     e.preventDefault();
     setApiError("");
+
     if (!validate()) return;
 
     setLoading(true);
     try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/auth/login`,
-        { email, password },
-        { withCredentials: true } 
-      );
-
-      if (data.accessToken) {
-        localStorage.setItem("bis_access_token", data.accessToken);
-      }
-
-      navigate("/home");
+      await login({ email: email.trim(), password });
+      navigate("/standards");
     } catch (err) {
       setApiError(
-        err.response?.data?.message || "Sign in failed. Check your credentials and try again."
+        err.response?.data?.message ||
+          "Sign in failed. Check your credentials and try again."
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNavigateToSignup = () => {
+    if (onSignUp) {
+      onSignUp();
+    } else {
+      navigate("/signup");
     }
   };
 
@@ -90,8 +90,7 @@ export default function Login({ onSignUp }) {
           </h1>
           <p className="text-lg text-white/70 leading-relaxed max-w-md">
             A secure, streamlined platform for authorized personnel and
-            registered technical partners of the Bureau of Indian
-            Standards.
+            registered technical partners of the Bureau of Indian Standards.
           </p>
         </div>
       </div>
@@ -157,24 +156,41 @@ export default function Login({ onSignUp }) {
               >
                 PASSWORD
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={8}
-                maxLength={64}
-                autoComplete="current-password"
-                aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? "password-error" : undefined}
-                className={`w-full border rounded-lg px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
-                  errors.password
-                    ? "border-red-400 focus-visible:ring-red-500"
-                    : "border-neutral-300 focus-visible:ring-blue-600"
-                }`}
-              />
+
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={8}
+                  maxLength={64}
+                  autoComplete="current-password"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "password-error" : undefined}
+                  className={`w-full border rounded-lg pl-3.5 pr-10 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
+                    errors.password
+                      ? "border-red-400 focus-visible:ring-red-500"
+                      : "border-neutral-300 focus-visible:ring-blue-600"
+                  }`}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400 hover:text-neutral-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
               {errors.password && (
                 <p id="password-error" className="text-xs text-red-600 mt-1">
                   {errors.password}
@@ -199,17 +215,18 @@ export default function Login({ onSignUp }) {
 
           <button
             type="button"
-            onClick={onSignUp}
+            onClick={handleNavigateToSignup}
             className="w-full bg-[#0d234f] hover:bg-[#0a1c40] text-white text-sm font-semibold rounded-xl py-3 transition-colors"
           >
-            SignUp
+            Sign Up
           </button>
         </div>
 
         <div className="flex items-center justify-between text-md pt-6">
           <a href="#" className="text-neutral-500 hover:text-neutral-800">
-              Trouble signing in?
+            Trouble signing in?
           </a>
+
           <a
             href="https://www.bis.gov.in"
             target="_blank"
