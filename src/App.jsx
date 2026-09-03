@@ -4,7 +4,12 @@ import StandardsPage from "./Pages/StandardsPage"
 
 function App() {
   return (
-  <Login />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/standards" element={<StandardsPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

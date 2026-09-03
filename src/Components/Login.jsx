@@ -67,28 +67,28 @@ export default function Login({ onSignUp }) {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <div className="hidden md:flex md:w-1/2 relative bg-linear-to-br from-[#0b1b3a] via-[#0d3a52] to-[#0f7a6e] p-10 flex-col justify-between">
+      <div className="hidden md:flex md:w-1/2 relative bg-linear-to-br from-[#0b1b3a] via-[#0d3a52] to-[#0f7a6e] p-20 flex-col justify-between">
         <div className="flex items-center gap-2 text-white/90">
-          <ShieldCheck className="w-5 h-5" strokeWidth={1.75} />
-          <span className="text-xs font-semibold tracking-wide">
+          <ShieldCheck className="w-8 h-8" strokeWidth={1.75} />
+          <span className="text-md font-semibold tracking-wide">
             GOVT. OF INDIA
           </span>
         </div>
 
         <div>
-          <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center mb-6 shadow-lg p-2.5">
+          <div className="w-20 h-20 rounded-xl bg-white flex items-center justify-center mb-6 shadow-lg p-2.5">
             <img
               src={bisLogo}
               alt="BIS Sahayak"
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-semibold text-white leading-tight mb-3">
+          <h1 className="text-6xl font-semibold text-white leading-tight mb-3">
             Empowering
             <br />
             Indian Standards
           </h1>
-          <p className="text-sm text-white/70 leading-relaxed max-w-xs">
+          <p className="text-lg text-white/70 leading-relaxed max-w-md">
             A secure, streamlined platform for authorized personnel and
             registered technical partners of the Bureau of Indian
             Standards.
@@ -99,16 +99,16 @@ export default function Login({ onSignUp }) {
       <div className="w-full md:w-1/2 flex flex-col p-10 min-h-screen">
         <div className="flex justify-end">
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+            <ShieldCheck className="w-4.5 h-4.5" strokeWidth={2} />
             Govt. Grade Security
           </span>
         </div>
 
         <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-1">
+          <h2 className="text-3xl font-bold text-neutral-900 mb-1">
             Namaste
           </h2>
-          <p className="text-sm text-neutral-500 mb-6">
+          <p className="text-md text-neutral-500 mb-6">
             Sign in to your BIS Sahayak account
           </p>
 
@@ -206,7 +206,10 @@ export default function Login({ onSignUp }) {
           </button>
         </div>
 
-        <div className="flex items-center justify-end text-xs pt-6">
+        <div className="flex items-center justify-between text-md pt-6">
+          <a href="#" className="text-neutral-500 hover:text-neutral-800">
+              Trouble signing in?
+          </a>
           <a
             href="https://www.bis.gov.in"
             target="_blank"
@@ -214,7 +217,7 @@ export default function Login({ onSignUp }) {
             className="inline-flex items-center gap-1 text-neutral-500 hover:text-neutral-800"
           >
             Official BIS Portal
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-4 h-4" />
           </a>
         </div>
       </div>
