@@ -14,7 +14,7 @@ import {
   getConversations,
   getMessages,
   createConversation,
-  sendMessagePlaceholder,
+  sendChatMessage,
 } from "../services/conversationService";
 
 const formatChatTitle = (rawText) => {
@@ -44,17 +44,14 @@ export default function AiAssistant() {
   const starterQuestions = [
     "What are the main activities of BIS?",
     "What is the ISI Mark?",
-    "How can I verify a BIS licence?",
+    "Show me standards for plugs and sockets",
   ];
 
   useEffect(() => {
     let cancelled = false;
     getConversations()
-      .then((data) => {
+      .then((list) => {
         if (cancelled) return;
-        const list = Array.isArray(data)
-          ? data
-          : data?.conversations || data?.chats || data?.data || [];
         setChats(list);
       })
       .catch(() => {
@@ -73,10 +70,7 @@ export default function AiAssistant() {
     setActiveConversationId(conversationId);
     try {
       const history = await getMessages(conversationId);
-      const msgList = Array.isArray(history)
-        ? history
-        : history?.messages || history?.data || [];
-      setMessages(msgList);
+      setMessages(history);
     } catch {
       setMessages([]);
     }
@@ -99,7 +93,7 @@ export default function AiAssistant() {
 
     const userMsg = { id: Date.now(), role: "user", text };
 
-    setMessages((prev) => [...(Array.isArray(prev) ? prev : []), userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setSending(true);
     setSendError("");
@@ -118,44 +112,30 @@ export default function AiAssistant() {
           id: conversationId,
           title: conversation?.title || topicTitle,
         };
-
-        setChats((prev) => [newChatEntry, ...(Array.isArray(prev) ? prev : [])]);
-      } else {
-        setChats((prev) =>
-          (Array.isArray(prev) ? prev : []).map((chat) => {
-            const id = chat.id || chat._id;
-            const isTarget = id === conversationId;
-            const needsTopic =
-              !chat.title ||
-              chat.title === "New Conversation" ||
-              chat.title === "Untitled chat";
-
-            return isTarget && needsTopic ? { ...chat, title: topicTitle } : chat;
-          })
-        );
+        setChats((prev) => [newChatEntry, ...prev]);
       }
 
-      const response = await sendMessagePlaceholder(text);
-      if (response) {
-        setMessages((prev) => [
-          ...(Array.isArray(prev) ? prev : []),
-          { id: Date.now() + 1, role: "assistant", ...response },
-        ]);
-      }
-    } catch (err) {
-      const errorText =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Chat isn't live yet — waiting on the backend's ML-integrated endpoint.";
+      const response = await sendChatMessage(text, conversationId);
+
+      const assistantText =
+        response?.reply ||
+        response?.message ||
+        response?.response ||
+        (typeof response === "string" ? response : "");
+
+      const standardData = response?.standard || response?.data?.standard || null;
 
       setMessages((prev) => [
-        ...(Array.isArray(prev) ? prev : []),
+        ...prev,
         {
           id: Date.now() + 1,
           role: "assistant",
-          error: errorText,
+          text: assistantText,
+          standard: standardData,
         },
       ]);
+    } catch {
+      setSendError("Could not retrieve AI response.");
     } finally {
       setSending(false);
     }
@@ -169,7 +149,7 @@ export default function AiAssistant() {
     <div className="min-h-screen bg-[#F7FAFC] flex font-sans">
       <Sidebar
         active="assistant"
-        recentChats={Array.isArray(chats) ? chats : []}
+        recentChats={chats}
         activeChatId={activeConversationId}
         onSelectChat={openConversation}
         onNewChat={handleStartNewChat}
@@ -180,7 +160,7 @@ export default function AiAssistant() {
 
       <div className="flex-1 min-w-0 flex flex-col h-screen">
         <div className="flex-1 overflow-y-auto px-10 py-8 flex flex-col justify-between">
-          {!Array.isArray(messages) || messages.length === 0 ? (
+          {messages.length === 0 ? (
             <div className="my-auto flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
               <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
                 <MessageSquare className="w-6 h-6 stroke-[2.2]" />
@@ -213,15 +193,18 @@ export default function AiAssistant() {
               {messages.map((msg) =>
                 msg.role === "user" ? (
                   <div key={msg.id} className="flex justify-end">
-                    <div className="bg-neutral-900 text-white text-base leading-relaxed rounded-2xl rounded-tr-sm px-6 py-3.5 max-w-xl break-words">
-                      {typeof msg.text === "string"
-                        ? msg.text
-                        : JSON.stringify(msg.text)}
+                    <div className="bg-neutral-900 text-white text-sm leading-relaxed rounded-2xl rounded-tr-sm px-6 py-3.5 max-w-xl break-words">
+                      {msg.text}
                     </div>
                   </div>
                 ) : (
-                  <div key={msg.id} className="flex justify-start w-full">
-                    {msg.standard ? (
+                  <div key={msg.id} className="flex flex-col gap-3 items-start w-full">
+                    {msg.text && (
+                      <div className="bg-white border border-neutral-200 text-neutral-800 text-sm leading-relaxed rounded-2xl rounded-tl-sm px-6 py-3.5 max-w-2xl shadow-xs">
+                        {msg.text}
+                      </div>
+                    )}
+                    {msg.standard && (
                       <div className="w-full max-w-3xl">
                         <StandardCard
                           code={msg.standard.code || "IS 0000:0000"}
@@ -240,29 +223,20 @@ export default function AiAssistant() {
                               ? window.open(msg.standard.pdfUrl, "_blank")
                               : console.log("Download PDF")
                           }
-                          onViewReference={() =>
-                            console.log("View reference clicked")
-                          }
-                          onRevisionHistory={() =>
-                            console.log("Revision history clicked")
-                          }
+                          onViewReference={() => console.log("Reference clicked")}
+                          onRevisionHistory={() => console.log("History clicked")}
                         />
-                      </div>
-                    ) : msg.error ? (
-                      <div className="bg-red-50 border border-red-200 text-red-600 text-base rounded-2xl px-6 py-3.5 max-w-xl">
-                        {typeof msg.error === "string"
-                          ? msg.error
-                          : "Failed to process chat response."}
-                      </div>
-                    ) : (
-                      <div className="bg-white border border-neutral-200 text-neutral-800 text-base leading-relaxed rounded-2xl rounded-tl-sm px-6 py-3.5 max-w-2xl shadow-xs">
-                        {typeof msg.text === "string"
-                          ? msg.text
-                          : "Response received."}
                       </div>
                     )}
                   </div>
                 )
+              )}
+              {sending && (
+                <div className="flex justify-start">
+                  <div className="bg-white border border-neutral-200 text-neutral-400 text-xs rounded-2xl px-5 py-3 shadow-xs animate-pulse">
+                    Analyzing standard registry...
+                  </div>
+                </div>
               )}
               <div ref={bottomRef} />
             </div>
@@ -270,7 +244,7 @@ export default function AiAssistant() {
         </div>
 
         {sendError && (
-          <div className="mx-10 mb-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl px-4 py-2.5">
+          <div className="mx-10 mb-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl px-4 py-2.5">
             {sendError}
           </div>
         )}
@@ -280,7 +254,7 @@ export default function AiAssistant() {
             e.preventDefault();
             handleSendMessage();
           }}
-          className="flex items-center gap-3 bg-white border border-neutral-200 rounded-full mx-10 mb-8 pl-5 pr-2 py-2.5 shadow-xs"
+          className="flex items-center gap-3 bg-white border border-neutral-200 rounded-full mx-10 mb-8 pl-5 pr-2 py-2 shadow-xs"
         >
           <Paperclip className="w-5 h-5 text-neutral-400 shrink-0 cursor-pointer hover:text-neutral-600" />
           <input
@@ -288,7 +262,7 @@ export default function AiAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about standards, certification processes, or upload documents for review..."
-            className="flex-1 bg-transparent text-base text-neutral-800 placeholder:text-neutral-400 focus:outline-none py-1.5"
+            className="flex-1 bg-transparent text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none py-1.5"
           />
           <button
             type="submit"

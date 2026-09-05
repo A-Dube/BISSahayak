@@ -8,7 +8,7 @@ export const NAV_PATHS = {
   labs: "/#",
   hallmarking: "/#",
   profile: "/#",
-  help: "/help",
+  help: "/#",
 };
 
 export function useSidebarNav() {
