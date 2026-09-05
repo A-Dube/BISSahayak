@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ExternalLink, Eye, EyeOff } from "lucide-react";
 import bisLogo from "../assets/BIS logo.png";
-import OtpModal from "../components/OtpModal";
+import OtpModal from "../Components/OtpModal";
 import { register, API_BASE_URL } from "../services/authService";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

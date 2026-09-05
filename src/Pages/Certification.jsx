@@ -9,7 +9,7 @@ import Sidebar from "../Components/Sidebar";
 import StandardCard from "../Components/StandardCard";
 import LoadingScreen from "../Components/LoadingScreen";
 import { useAuth } from "../context/AuthContext";
-import { useSidebarNav } from "../utils/Navigation";
+import { useSidebarNav } from "../Utils/Navigation";
 import {
   getConversations,
   getMessages,

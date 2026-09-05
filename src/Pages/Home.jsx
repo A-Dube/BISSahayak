@@ -14,7 +14,7 @@ import {
 import Sidebar from "../Components/Sidebar";
 import LoadingScreen from "../Components/LoadingScreen";
 import { useAuth } from "../context/AuthContext";
-import { useSidebarNav } from "../utils/Navigation";
+import { useSidebarNav } from "../Utils/Navigation";
 import api from "../services/authService";
 
 const QUICK_SERVICES = [
