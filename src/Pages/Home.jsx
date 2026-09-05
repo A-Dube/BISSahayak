@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Sidebar from "../Components/Sidebar";
 import LoadingScreen from "../Components/LoadingScreen";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContext";
 import { useSidebarNav } from "../utils/navigation";
 import api from "../services/authService";
 

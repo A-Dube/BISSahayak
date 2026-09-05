@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/authContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 
 import Login from "./Components/Login";
@@ -49,12 +49,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* Sidebar also links to these — add pages when ready */}
-          {/* <Route path="/testing-labs" element={<ProtectedRoute><TestingLabs /></ProtectedRoute>} /> */}
-          {/* <Route path="/hallmarking" element={<ProtectedRoute><Hallmarking /></ProtectedRoute>} /> */}
-          {/* <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> */}
-          {/* <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} /> */}
         </Routes>
       </BrowserRouter>
     </AuthProvider>
