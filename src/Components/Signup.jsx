@@ -4,12 +4,14 @@ import { ShieldCheck, ExternalLink, Eye, EyeOff } from "lucide-react";
 import bisLogo from "../assets/BIS logo.png";
 import OtpModal from "../Components/OtpModal";
 import { register, API_BASE_URL } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
 export default function Signup({ onSignIn }) {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -94,10 +96,11 @@ export default function Signup({ onSignIn }) {
     }
   };
 
-  const handleOtpVerified = (data) => {
+  const handleOtpVerified = async (data) => {
     if (data?.accessToken) {
       localStorage.setItem("bis_access_token", data.accessToken);
     }
+    await refreshUser();
     setOtpOpen(false);
     navigate("/home");
   };

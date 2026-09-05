@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ExternalLink, Eye, EyeOff } from "lucide-react";
 import bisLogo from "../assets/BIS logo.png";
-import { login } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
 export default function Login({ onSignUp }) {
   const navigate = useNavigate();
+  const { login } = useAuth(); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +38,7 @@ export default function Login({ onSignUp }) {
     return !next.email && !next.password;
   };
 
- const handleSignIn = async (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
     setApiError("");
 
@@ -45,11 +46,7 @@ export default function Login({ onSignUp }) {
 
     setLoading(true);
     try {
-      const data = await login({ email: email.trim(), password });
-      if (data?.accessToken) {
-        localStorage.setItem("bis_access_token", data.accessToken);
-      }
-
+      await login({ email: email.trim(), password });
       navigate("/home");
     } catch (err) {
       setApiError(
@@ -59,7 +56,7 @@ export default function Login({ onSignUp }) {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleNavigateToSignup = () => {
     if (onSignUp) {
