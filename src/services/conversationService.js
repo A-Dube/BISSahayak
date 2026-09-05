@@ -1,4 +1,3 @@
-// src/services/conversationService.js
 import api from "./authService";
 
 export const MOCK_CONVERSATIONS = [
@@ -113,3 +112,4 @@ export const sendChatMessage = async (message, conversationId = null) => {
     };
   }
 };
+export const sendMessagePlaceholder = sendChatMessage;
