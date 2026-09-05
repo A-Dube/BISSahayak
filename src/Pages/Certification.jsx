@@ -178,7 +178,7 @@ export default function AiAssistant() {
               {messages.map((msg) =>
                 msg.role === "user" ? (
                   <div key={msg.id} className="flex justify-end">
-                    <div className="bg-neutral-900 text-white text-base leading-relaxed rounded-2xl rounded-tr-sm px-6 py-3.5 max-w-xl break-words">
+                    <div className="bg-neutral-900 text-white text-base leading-relaxed rounded-2xl rounded-tr-sm px-6 py-3.5 max-w-xl wrap-break-words">
                       {typeof msg.text === "string"
                         ? msg.text
                         : JSON.stringify(msg.text)}
