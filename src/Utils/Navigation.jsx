@@ -5,10 +5,10 @@ export const NAV_PATHS = {
   assistant: "/assistant",
   standards: "/standards",
   certification: "/certification",
-  labs: "/#",
-  hallmarking: "/#",
-  profile: "/#",
-  help: "/#",
+  labs: null,
+  hallmarking: null,
+  profile: null,
+  help: null,
 };
 
 export function useSidebarNav() {

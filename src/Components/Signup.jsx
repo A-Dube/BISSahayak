@@ -99,7 +99,7 @@ export default function Signup({ onSignIn }) {
       localStorage.setItem("bis_access_token", data.accessToken);
     }
     setOtpOpen(false);
-    navigate("/");
+    navigate("/home");
   };
 
   const handleNavigateToLogin = () => {
