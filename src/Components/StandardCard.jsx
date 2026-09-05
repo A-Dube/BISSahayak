@@ -1,11 +1,11 @@
 import { Sparkles, Download, BookOpen, History } from "lucide-react";
 
 export default function StandardCard({
-  code,
+  code = "IS 0000",
   status = "Active",
   category,
-  title,
-  description,
+  title = "Standard Specification",
+  description = "",
   aiInsight,
   relevanceMatch,
   onDownloadPdf,
@@ -34,9 +34,11 @@ export default function StandardCard({
           </div>
 
           <h3 className="text-lg font-bold text-neutral-900 mb-2">{title}</h3>
-          <p className="text-sm text-neutral-500 leading-relaxed max-w-2xl">
-            {description}
-          </p>
+          {description && (
+            <p className="text-sm text-neutral-500 leading-relaxed max-w-2xl">
+              {description}
+            </p>
+          )}
         </div>
 
         {typeof relevanceMatch === "number" && (
@@ -51,7 +53,7 @@ export default function StandardCard({
             <div className="w-20 h-1 rounded-full bg-neutral-100 ml-auto overflow-hidden">
               <div
                 className="h-full bg-emerald-500 rounded-full"
-                style={{ width: `${relevanceMatch}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, relevanceMatch))}%` }}
               />
             </div>
           </div>
@@ -73,7 +75,7 @@ export default function StandardCard({
           <button
             type="button"
             onClick={onDownloadPdf}
-            className="inline-flex items-center gap-2 bg-[#0d234f] hover:bg-[#0a1c40] text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors"
+            className="inline-flex items-center gap-2 bg-[#0d234f] hover:bg-[#0a1c40] text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Download PDF
@@ -81,7 +83,7 @@ export default function StandardCard({
           <button
             type="button"
             onClick={onViewReference}
-            className="inline-flex items-center gap-2 border border-neutral-300 text-neutral-700 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-neutral-50 transition-colors"
+            className="inline-flex items-center gap-2 border border-neutral-300 text-neutral-700 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-neutral-50 transition-colors cursor-pointer"
           >
             <BookOpen className="w-4 h-4" />
             View Reference
@@ -90,7 +92,7 @@ export default function StandardCard({
         <button
           type="button"
           onClick={onRevisionHistory}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-600"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-600 cursor-pointer"
         >
           <History className="w-3.5 h-3.5" />
           Revision History

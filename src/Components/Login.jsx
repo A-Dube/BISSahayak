@@ -46,7 +46,7 @@ export default function Login({ onSignUp }) {
     setLoading(true);
     try {
       await login({ email: email.trim(), password });
-      navigate("/standards");
+      navigate("/");
     } catch (err) {
       setApiError(
         err.response?.data?.message ||
@@ -69,8 +69,8 @@ export default function Login({ onSignUp }) {
     <div className="min-h-screen bg-white flex">
       <div className="hidden md:flex md:w-1/2 relative bg-linear-to-br from-[#0b1b3a] via-[#0d3a52] to-[#0f7a6e] p-20 flex-col justify-between">
         <div className="flex items-center gap-2 text-white/90">
-          <ShieldCheck className="w-8 h-8" strokeWidth={1.75} />
-          <span className="text-md font-semibold tracking-wide">
+          <ShieldCheck className="w-12 h-12" strokeWidth={1.75} />
+          <span className="text-lg font-semibold tracking-wide">
             GOVT. OF INDIA
           </span>
         </div>
@@ -97,17 +97,17 @@ export default function Login({ onSignUp }) {
 
       <div className="w-full md:w-1/2 flex flex-col p-10 min-h-screen">
         <div className="flex justify-end">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5">
-            <ShieldCheck className="w-4.5 h-4.5" strokeWidth={2} />
+          <span className="inline-flex items-center gap-1.5 text-md font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5">
+            <ShieldCheck className="w-6.5 h-6.5" strokeWidth={2} />
             Govt. Grade Security
           </span>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
-          <h2 className="text-3xl font-bold text-neutral-900 mb-1">
+        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
+          <h2 className="text-5xl font-bold text-neutral-900 mb-1">
             Namaste
           </h2>
-          <p className="text-md text-neutral-500 mb-6">
+          <p className="text-xl text-neutral-500 mb-6">
             Sign in to your BIS Sahayak account
           </p>
 
@@ -121,7 +121,7 @@ export default function Login({ onSignUp }) {
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs font-semibold tracking-wide text-neutral-600 mb-1.5"
+                className="block text-md font-semibold tracking-wide text-neutral-600 mb-1.5"
               >
                 EMAIL ADDRESS
               </label>
@@ -136,7 +136,7 @@ export default function Login({ onSignUp }) {
                 autoComplete="email"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "email-error" : undefined}
-                className={`w-full border rounded-lg px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
+                className={`w-full border rounded-lg px-3.5 py-2.5 text-xs text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
                   errors.email
                     ? "border-red-400 focus-visible:ring-red-500"
                     : "border-neutral-300 focus-visible:ring-blue-600"
@@ -152,7 +152,7 @@ export default function Login({ onSignUp }) {
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold tracking-wide text-neutral-600 mb-1.5"
+                className="block text-md font-semibold tracking-wide text-neutral-600 mb-1.5"
               >
                 PASSWORD
               </label>

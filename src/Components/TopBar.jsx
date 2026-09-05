@@ -7,7 +7,7 @@ export default function TopBar({ query, onQueryChange, onSearch, avatarUrl }) {
   };
 
   return (
-    <div className="flex items-center gap-4 px-8 py-5">
+    <div className="flex items-center gap-4 px-60 py-5 max-w-8xl">
       <form
         onSubmit={handleSubmit}
         className="flex-1 flex items-center gap-3 bg-neutral-100 rounded-xl pl-4 pr-1.5 py-1.5"
@@ -43,14 +43,6 @@ export default function TopBar({ query, onQueryChange, onSearch, avatarUrl }) {
       >
         <Settings className="w-4.5 h-4.5" />
       </button>
-
-      <div className="w-9 h-9 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center shrink-0">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-        ) : (
-          <User className="w-4 h-4 text-neutral-500" />
-        )}
-      </div>
     </div>
   );
 }

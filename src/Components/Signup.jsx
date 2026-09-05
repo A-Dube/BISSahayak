@@ -99,14 +99,14 @@ export default function Signup({ onSignIn }) {
       localStorage.setItem("bis_access_token", data.accessToken);
     }
     setOtpOpen(false);
-    navigate("/standards");
+    navigate("/home");
   };
 
   const handleNavigateToLogin = () => {
     if (onSignIn) {
       onSignIn();
     } else {
-      navigate("/login");
+      navigate("/");
     }
   };
 
