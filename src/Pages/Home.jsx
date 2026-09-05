@@ -210,7 +210,7 @@ export default function Home() {
                   News &amp; Amendments
                 </h2>
                 <button
-                  onClick={() => navigate("/#")}
+                  onClick={() => navigate(null)}
                   className="text-md font-semibold text-emerald-600 hover:text-emerald-700"
                 >
                   View All
@@ -221,7 +221,7 @@ export default function Home() {
                 {news.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => navigate("/#")}
+                    onClick={() => navigate(null)}
                     className="w-full text-left flex items-center justify-between gap-4 bg-white border border-neutral-200 rounded-2xl p-5 hover:border-neutral-300 hover:shadow-sm transition-all cursor-pointer"
                   >
                     <div className="min-w-0 flex-1">
@@ -283,7 +283,7 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => navigate("/#")}
+                onClick={() => navigate(null)}
                 className="w-full mt-8 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold rounded-xl py-2.5 transition-colors cursor-pointer"
               >
                 View All History
