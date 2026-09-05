@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 export const NAV_PATHS = {
-  home: "/",
+  home: "/home",
   assistant: "/assistant",
   standards: "/standards",
   certification: "/certification",

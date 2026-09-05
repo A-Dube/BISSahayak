@@ -149,7 +149,6 @@ export default function Home() {
       />
 
       <main className="flex-1 min-w-0 p-8 lg:p-12">
-        {/* Top Hero Section */}
         <div className="text-center max-w-2xl mx-auto mb-10 pt-4">
           <h1 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight">
             How can I help you today?

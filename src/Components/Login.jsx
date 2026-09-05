@@ -37,7 +37,7 @@ export default function Login({ onSignUp }) {
     return !next.email && !next.password;
   };
 
-  const handleSignIn = async (e) => {
+ const handleSignIn = async (e) => {
     e.preventDefault();
     setApiError("");
 
@@ -45,17 +45,21 @@ export default function Login({ onSignUp }) {
 
     setLoading(true);
     try {
-      await login({ email: email.trim(), password });
-      navigate("/");
+      const data = await login({ email: email.trim(), password });
+      if (data?.accessToken) {
+        localStorage.setItem("bis_access_token", data.accessToken);
+      }
+
+      navigate("/home");
     } catch (err) {
       setApiError(
         err.response?.data?.message ||
-          "Sign in failed. Check your credentials and try again."
+          "Sign in failed. Server might be waking up, please retry."
       );
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleNavigateToSignup = () => {
     if (onSignUp) {

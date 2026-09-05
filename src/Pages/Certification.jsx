@@ -1,269 +1,311 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  Paperclip,
-  ArrowRight,
-  MessageSquare,
+  CheckCircle2,
+  FileText,
+  Lock,
+  Download,
+  MessageCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "../Components/Sidebar";
-import StandardCard from "../Components/StandardCard";
-import LoadingScreen from "../Components/LoadingScreen";
 import { useAuth } from "../context/AuthContext";
 import { useSidebarNav } from "../Utils/Navigation";
-import {
-  getConversations,
-  getMessages,
-  createConversation,
-  sendMessagePlaceholder,
-} from "../services/conversationService";
+import api from "../services/authService";
 
-export default function AiAssistant() {
+const DEFAULT_JOURNEY = {
+  productName: "Decorative Lighting & Luminaires",
+  steps: [
+    {
+      id: "step-1",
+      title: "Identify Standard & Quality Control Order (QCO)",
+      description: "Verify applicability under Scheme-I for IS 10322 (Part 5/Sec 1).",
+      status: "completed",
+      standard: {
+        code: "IS 10322 (Part 5/Sec 1): 2012",
+        title: "Luminaires - Particular Requirements: General Purpose",
+      },
+    },
+    {
+      id: "step-2",
+      title: "Sample Testing at NABL / BIS Approved Lab",
+      description: "Submit product samples for insulation, thermal resistance, and photobiological safety testing.",
+      status: "current",
+      tag: "Testing in Progress",
+    },
+    {
+      id: "step-3",
+      title: "Factory Audit & Quality Inspection",
+      description: "BIS inspection officer visits the manufacturing plant for in-house testing facility verification.",
+      status: "pending",
+    },
+    {
+      id: "step-4",
+      title: "Grant of BIS License & ISI Mark Allotment",
+      description: "Issuance of the official license number (CML) and marking authorization.",
+      status: "pending",
+    },
+  ],
+  keyRequirements: [
+    { label: "Valid Factory Registration / MSME Udyam", met: true },
+    { label: "In-house Test Laboratory Setup", met: true },
+    { label: "NABL Test Report for Raw Materials", met: false },
+    { label: "Designated Quality Control In-Charge", met: false },
+  ],
+  referenceClauses: [
+    { title: "Clause 4.2 - Electric Shock Protection", desc: "Insulation barriers must withstand 1.5 kV withstand voltage test." },
+    { title: "Clause 8.1 - Resistance to Heat & Fire", desc: "Glow wire test verification at 650°C for non-metallic enclosures." },
+  ],
+};
+
+function StepIcon({ status }) {
+  if (status === "completed") {
+    return (
+      <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+      </div>
+    );
+  }
+  if (status === "current") {
+    return (
+      <div className="w-7 h-7 rounded-full bg-neutral-900 flex items-center justify-center shrink-0">
+        <div className="w-2.5 h-2.5 rounded-full bg-white" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-7 h-7 rounded-full bg-neutral-100 border-2 border-neutral-200 flex items-center justify-center shrink-0 text-xs text-neutral-400 font-semibold">
+      {status?.order ?? "•"}
+    </div>
+  );
+}
+
+export default function Certification() {
+  const { productId } = useParams();
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
   const { user, logout } = useAuth();
-  const [chats, setChats] = useState([]);
-  const [activeConversationId, setActiveConversationId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
-  const [sendError, setSendError] = useState("");
-  const bottomRef = useRef(null);
-
-  const starterQuestions = [
-    "What are the main activities of BIS?",
-    "What is the ISI Mark?",
-    "How can I verify a BIS licence?",
-  ];
+  const [journey, setJourney] = useState(DEFAULT_JOURNEY);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    getConversations()
-      .then((data) => {
-        if (cancelled) return;
-        const list = Array.isArray(data)
-          ? data
-          : data?.conversations || data?.chats || data?.data || [];
-        setChats(list);
+    setLoading(true);
+
+    api
+      .get(`/certification/journey/${productId || "current"}`)
+      .then((res) => {
+        if (!cancelled && res.data) {
+          setJourney(res.data);
+        }
       })
       .catch(() => {
-        if (!cancelled) setChats([]);
+        if (!cancelled) {
+          setJourney(DEFAULT_JOURNEY);
+        }
       })
       .finally(() => {
-        if (!cancelled) setPageLoading(false);
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
-
-  const openConversation = async (conversationId) => {
-    setActiveConversationId(conversationId);
-    try {
-      const history = await getMessages(conversationId);
-      const msgList = Array.isArray(history)
-        ? history
-        : history?.messages || history?.data || [];
-      setMessages(msgList);
-    } catch {
-      setMessages([]);
-    }
-  };
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSendMessage = async (textToSend) => {
-    const text = (textToSend || input).trim();
-    if (!text || sending) return;
-
-    const userMsg = { id: Date.now(), role: "user", text };
-
-    setMessages((prev) => [...(Array.isArray(prev) ? prev : []), userMsg]);
-    setInput("");
-    setSending(true);
-    setSendError("");
-
-    try {
-      let conversationId = activeConversationId;
-      if (!conversationId) {
-        const conversation = await createConversation();
-        conversationId = conversation?.id || conversation?._id;
-        setActiveConversationId(conversationId);
-
-        if (conversation) {
-          setChats((prev) => [
-            conversation,
-            ...(Array.isArray(prev) ? prev : []),
-          ]);
-        }
-      }
-
-      const response = await sendMessagePlaceholder(text);
-      if (response) {
-        setMessages((prev) => [
-          ...(Array.isArray(prev) ? prev : []),
-          { id: Date.now() + 1, role: "assistant", ...response },
-        ]);
-      }
-    } catch (err) {
-      const errorText =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Chat isn't live yet — waiting on the backend's ML-integrated endpoint.";
-
-      setMessages((prev) => [
-        ...(Array.isArray(prev) ? prev : []),
-        {
-          id: Date.now() + 1,
-          role: "assistant",
-          error: errorText,
-        },
-      ]);
-    } finally {
-      setSending(false);
-    }
-  };
-
-  if (pageLoading) {
-    return <LoadingScreen message="Preparing your secure conversation..." />;
-  }
+  }, [productId, user?.id]);
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex font-sans">
+    <div className="min-h-screen bg-neutral-50 flex font-sans">
       <Sidebar
-        active="assistant"
-        recentChats={Array.isArray(chats) ? chats : []}
-        activeChatId={activeConversationId}
-        onSelectChat={openConversation}
+        active="certification"
         onNavigate={onNavigate}
         onStartCertification={() => navigate("/certification")}
         onLogout={logout}
       />
 
-      <div className="flex-1 min-w-0 flex flex-col h-screen">
-        <div className="flex-1 overflow-y-auto px-10 py-8 flex flex-col justify-between">
-          {!Array.isArray(messages) || messages.length === 0 ? (
-            <div className="my-auto flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
-                <MessageSquare className="w-6 h-6 stroke-[2.2]" />
-              </div>
+      <div className="flex-1 min-w-0 px-10 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-neutral-900">
+            {journey?.productName || "Compliance Journey Roadmap"}
+          </h1>
+          <p className="text-neutral-500 text-sm mt-1">
+            Certification Steps, Milestones, and Clause Requirements
+          </p>
+        </div>
 
-              <h1 className="text-4xl font-semibold text-neutral-800 tracking-tight mb-3">
-                How can I help you today?
-              </h1>
-
-              <p className="text-neutral-500 text-sm max-w-lg mb-8 leading-relaxed">
-                Ask about Indian Standards, certification, ISI Mark, HUID,
-                testing requirements, or BIS services.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-2.5">
-                {starterQuestions.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => handleSendMessage(q)}
-                    className="text-xs text-neutral-600 bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors px-4 py-2 rounded-full shadow-xs cursor-pointer"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {messages.map((msg) =>
-                msg.role === "user" ? (
-                  <div key={msg.id} className="flex justify-end">
-                    <div className="bg-neutral-900 text-white text-base leading-relaxed rounded-2xl rounded-tr-sm px-6 py-3.5 max-w-xl wrap-break-words">
-                      {typeof msg.text === "string"
-                        ? msg.text
-                        : JSON.stringify(msg.text)}
-                    </div>
+        <div className="flex gap-8 flex-col lg:flex-row">
+          {/* Steps List */}
+          <div className="flex-1 min-w-0 space-y-0">
+            {(journey?.steps || []).map((step, i) => {
+              const isLast = i === journey.steps.length - 1;
+              return (
+                <div key={step.id || i} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <StepIcon
+                      status={
+                        step.status === "pending"
+                          ? { order: i + 1 }
+                          : step.status
+                      }
+                    />
+                    {!isLast && (
+                      <div
+                        className={`w-px flex-1 my-1 ${
+                          step.status === "completed"
+                            ? "bg-emerald-300"
+                            : "bg-neutral-200"
+                        }`}
+                        style={{ minHeight: "48px" }}
+                      />
+                    )}
                   </div>
-                ) : (
-                  <div key={msg.id} className="flex justify-start w-full">
-                    {msg.standard ? (
-                      <div className="w-full max-w-3xl">
-                        <StandardCard
-                          code={msg.standard.code || "IS 0000:0000"}
-                          status={msg.standard.status || "Active"}
-                          category={msg.standard.category}
-                          title={msg.standard.title || "Standard Result"}
-                          description={msg.standard.description}
-                          aiInsight={msg.standard.aiInsight}
-                          relevanceMatch={
-                            typeof msg.standard.relevanceMatch === "number"
-                              ? msg.standard.relevanceMatch
-                              : msg.standard.confidence
-                          }
-                          onDownloadPdf={() =>
-                            msg.standard.pdfUrl
-                              ? window.open(msg.standard.pdfUrl, "_blank")
-                              : console.log("Download PDF")
-                          }
-                          onViewReference={() =>
-                            console.log("View reference clicked")
-                          }
-                          onRevisionHistory={() =>
-                            console.log("Revision history clicked")
-                          }
-                        />
+
+                  <div
+                    className={`flex-1 mb-4 rounded-xl p-5 ${
+                      step.status === "current"
+                        ? "bg-white border-2 border-neutral-900 shadow-xs"
+                        : step.status === "completed"
+                        ? "bg-white border border-neutral-200"
+                        : "bg-neutral-100/60 border border-neutral-100"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p
+                          className={`font-semibold ${
+                            step.status === "pending"
+                              ? "text-neutral-400"
+                              : "text-neutral-900"
+                          }`}
+                        >
+                          {step.title}
+                        </p>
+                        <p
+                          className={`text-sm mt-1 ${
+                            step.status === "pending"
+                              ? "text-neutral-400"
+                              : "text-neutral-500"
+                          }`}
+                        >
+                          {step.description}
+                        </p>
                       </div>
-                    ) : msg.error ? (
-                      <div className="bg-red-50 border border-red-200 text-red-600 text-base rounded-2xl px-6 py-3.5 max-w-xl">
-                        {typeof msg.error === "string"
-                          ? msg.error
-                          : "Failed to process chat response."}
+                      {step.status === "completed" && (
+                        <span className="shrink-0 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-3 py-1">
+                          Completed
+                        </span>
+                      )}
+                      {step.status === "current" && (
+                        <span className="shrink-0 text-xs font-semibold text-white bg-neutral-900 rounded-full px-3 py-1">
+                          Current Step
+                        </span>
+                      )}
+                    </div>
+
+                    {step.status === "pending" && (
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-400 mt-3">
+                        <Lock className="w-3 h-3" />
+                        Pending previous milestone
                       </div>
-                    ) : (
-                      <div className="bg-white border border-neutral-200 text-neutral-800 text-base leading-relaxed rounded-2xl rounded-tl-sm px-6 py-3.5 max-w-2xl shadow-xs">
-                        {typeof msg.text === "string"
-                          ? msg.text
-                          : "Response received."}
+                    )}
+
+                    {step.tag && (
+                      <span className="inline-block text-xs font-medium text-neutral-600 bg-neutral-100 rounded px-2 py-1 mt-3">
+                        {step.tag}
+                      </span>
+                    )}
+
+                    {step.standard && (
+                      <div className="flex items-center gap-3 bg-neutral-50 rounded-lg p-3 mt-4 border border-neutral-200/60">
+                        <div className="w-8 h-8 rounded bg-neutral-900 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-neutral-900">
+                            {step.standard.code}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            {step.standard.title}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {step.status === "current" && (
+                      <div className="flex gap-3 mt-4">
+                        <button
+                          type="button"
+                          className="text-sm font-semibold text-white bg-neutral-900 rounded-lg px-4 py-2 hover:bg-neutral-800 transition-colors cursor-pointer"
+                        >
+                          Acknowledge
+                        </button>
+                        <button
+                          type="button"
+                          className="text-sm font-semibold text-neutral-700 border border-neutral-300 rounded-lg px-4 py-2 hover:bg-neutral-50 transition-colors cursor-pointer"
+                        >
+                          View Details
+                        </button>
                       </div>
                     )}
                   </div>
-                )
-              )}
-              <div ref={bottomRef} />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right Panel */}
+          <aside className="w-full lg:w-72 shrink-0 space-y-4">
+            <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-xs">
+              <p className="font-semibold text-neutral-900 text-sm mb-3">
+                Key Requirements
+              </p>
+              <ul className="space-y-2.5">
+                {(journey?.keyRequirements || []).map((req) => (
+                  <li key={req.label} className="flex items-start gap-2 text-sm">
+                    {req.met ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-neutral-200 shrink-0 mt-0.5" />
+                    )}
+                    <span className={req.met ? "text-neutral-700" : "text-neutral-400"}>
+                      {req.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
+
+            <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-xs">
+              <p className="font-semibold text-neutral-900 text-sm mb-3">
+                Reference Clauses
+              </p>
+              <div className="space-y-3">
+                {(journey?.referenceClauses || []).map((clause) => (
+                  <div key={clause.title}>
+                    <p className="text-sm font-medium text-neutral-800">{clause.title}</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">{clause.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
 
-        {sendError && (
-          <div className="mx-10 mb-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl px-4 py-2.5">
-            {sendError}
-          </div>
-        )}
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex items-center gap-3 bg-white border border-neutral-200 rounded-full mx-10 mb-8 pl-5 pr-2 py-2.5 shadow-xs"
-        >
-          <Paperclip className="w-5 h-5 text-neutral-400 shrink-0 cursor-pointer hover:text-neutral-600" />
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about standards, certification processes, or upload documents for review..."
-            className="flex-1 bg-transparent text-base text-neutral-800 placeholder:text-neutral-400 focus:outline-none py-1.5"
-          />
+        <div className="flex justify-end gap-3 mt-8">
           <button
-            type="submit"
-            disabled={sending}
-            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white transition-colors cursor-pointer"
-            aria-label="Send"
+            type="button"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 border border-neutral-300 rounded-lg px-4 py-2.5 hover:bg-white transition-colors cursor-pointer"
           >
-            <ArrowRight className="w-4 h-4" />
+            <Download className="w-4 h-4" />
+            Download Checklist
           </button>
-        </form>
+          <button
+            type="button"
+            onClick={() => navigate("/assistant")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-neutral-900 rounded-lg px-4 py-2.5 hover:bg-neutral-800 transition-colors cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Connect with Expert
+          </button>
+        </div>
       </div>
     </div>
   );
