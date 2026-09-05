@@ -17,7 +17,6 @@ import {
   sendMessagePlaceholder,
 } from "../services/conversationService";
 
-// Helper to clean and format queries into human-readable sidebar topics
 const formatChatTitle = (rawText) => {
   if (!rawText) return "New Conversation";
   const cleaned = rawText
