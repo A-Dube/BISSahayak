@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import Sidebar from "../Components/Sidebar";
 import LoadingScreen from "../Components/LoadingScreen";
-import { useAuth } from "../context/authContext";
-import { useSidebarNav } from "../utils/navigation";
+import { useAuth } from "../context/AuthContext";
+import { useSidebarNav } from "../utils/Navigation";
 import api from "../services/authService";
 
 const QUICK_SERVICES = [

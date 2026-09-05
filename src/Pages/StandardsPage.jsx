@@ -6,8 +6,8 @@ import TopBar from "../Components/TopBar";
 import FilterBar from "../Components/FilterBar";
 import StandardCard from "../Components/StandardCard";
 import LoadingScreen from "../Components/LoadingScreen";
-import { useSidebarNav } from "../utils/navigation";
-import { useAuth } from "../context/authContext";
+import { useSidebarNav } from "../utils/Navigation";
+import { useAuth } from "../context/AuthContext";
 import { searchStandards } from "../services/standardsService";
 
 export default function StandardsPage() {

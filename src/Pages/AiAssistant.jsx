@@ -8,8 +8,8 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../Components/Sidebar";
 import StandardCard from "../Components/StandardCard";
 import LoadingScreen from "../Components/LoadingScreen";
-import { useAuth } from "../context/authContext";
-import { useSidebarNav } from "../utils/navigation";
+import { useAuth } from "../context/AuthContext";
+import { useSidebarNav } from "../utils/Navigation";
 import {
   getConversations,
   getMessages,
