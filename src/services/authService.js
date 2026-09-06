@@ -52,10 +52,15 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
+    const isAuthEndpoint =
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register") ||
+      originalRequest.url?.includes("/auth/refresh-token");
+
     if (
       error.response?.status !== 401 ||
       originalRequest._retry ||
-      originalRequest.url?.includes("/auth/refresh-token")
+      isAuthEndpoint
     ) {
       return Promise.reject(error);
     }
@@ -77,9 +82,15 @@ api.interceptors.response.use(
     try {
       const refreshCall = async () => {
         try {
-          return await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, { withCredentials: true });
+          return await axios.post(
+            `${API_BASE_URL}/auth/refresh-token`,
+            {},
+            { withCredentials: true }
+          );
         } catch {
-          return await axios.get(`${API_BASE_URL}/auth/refresh-token`, { withCredentials: true });
+          return await axios.get(`${API_BASE_URL}/auth/refresh-token`, {
+            withCredentials: true,
+          });
         }
       };
 
@@ -96,8 +107,8 @@ api.interceptors.response.use(
     } catch (refreshError) {
       onRefreshFailed(refreshError);
       localStorage.removeItem("bis_access_token");
-      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-        window.location.href = "/login";
+      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+        window.location.href = "/";
       }
       return Promise.reject(refreshError);
     } finally {
@@ -138,7 +149,9 @@ export async function verifyEmail({ email, otp }) {
       throw err;
     }
   }
-  if (response.data?.accessToken) localStorage.setItem("bis_access_token", response.data.accessToken);
+  if (response.data?.accessToken) {
+    localStorage.setItem("bis_access_token", response.data.accessToken);
+  }
   return response.data;
 }
 
@@ -160,7 +173,9 @@ export async function refreshToken() {
   } catch {
     response = await api.get("/auth/refresh-token");
   }
-  if (response.data?.accessToken) localStorage.setItem("bis_access_token", response.data.accessToken);
+  if (response.data?.accessToken) {
+    localStorage.setItem("bis_access_token", response.data.accessToken);
+  }
   return response.data;
 }
 
