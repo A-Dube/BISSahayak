@@ -9,7 +9,7 @@ import Home from "./Pages/Home";
 import StandardsPage from "./Pages/StandardsPage";
 import AiAssistant from "./Pages/AiAssistant";
 import Certification from "./Pages/Certification";
-import ProfileSettings from "./Pages/Profilesettings";
+import ProfileSettings from "./Pages/ProfileSettings";
 
 function App() {
   return (
