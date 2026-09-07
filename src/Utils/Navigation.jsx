@@ -7,7 +7,7 @@ export const NAV_PATHS = {
   certification: "/certification",
   labs: null,
   hallmarking: null,
-  profile: null,
+  profile: "/profile",
   help: null,
 };
 

@@ -10,6 +10,7 @@ import {
 import Sidebar from "../Components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useSidebarNav } from "../Utils/Navigation";
+import { useLanguage } from "../context/LanguageContext";
 import api from "../services/authService";
 
 const DEFAULT_JOURNEY = {
@@ -84,6 +85,8 @@ export default function Certification() {
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
+
   const [journey, setJourney] = useState(DEFAULT_JOURNEY);
   const [loading, setLoading] = useState(true);
 
@@ -124,15 +127,14 @@ export default function Certification() {
       <div className="flex-1 min-w-0 px-10 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-neutral-900">
-            {journey?.productName || "Compliance Journey Roadmap"}
+            {journey?.productName || t("complianceRoadmap")}
           </h1>
           <p className="text-neutral-500 text-sm mt-1">
-            Certification Steps, Milestones, and Clause Requirements
+            {t("certificationSubtitle")}
           </p>
         </div>
 
         <div className="flex gap-8 flex-col lg:flex-row">
-          {/* Steps List */}
           <div className="flex-1 min-w-0 space-y-0">
             {(journey?.steps || []).map((step, i) => {
               const isLast = i === journey.steps.length - 1;
@@ -190,12 +192,12 @@ export default function Certification() {
                       </div>
                       {step.status === "completed" && (
                         <span className="shrink-0 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-3 py-1">
-                          Completed
+                          {t("completed")}
                         </span>
                       )}
                       {step.status === "current" && (
                         <span className="shrink-0 text-xs font-semibold text-white bg-neutral-900 rounded-full px-3 py-1">
-                          Current Step
+                          {t("currentStep")}
                         </span>
                       )}
                     </div>
@@ -203,7 +205,7 @@ export default function Certification() {
                     {step.status === "pending" && (
                       <div className="flex items-center gap-1.5 text-xs text-neutral-400 mt-3">
                         <Lock className="w-3 h-3" />
-                        Pending previous milestone
+                        {t("pendingPrevious")}
                       </div>
                     )}
 
@@ -235,13 +237,13 @@ export default function Certification() {
                           type="button"
                           className="text-sm font-semibold text-white bg-neutral-900 rounded-lg px-4 py-2 hover:bg-neutral-800 transition-colors cursor-pointer"
                         >
-                          Acknowledge
+                          {t("acknowledge")}
                         </button>
                         <button
                           type="button"
                           className="text-sm font-semibold text-neutral-700 border border-neutral-300 rounded-lg px-4 py-2 hover:bg-neutral-50 transition-colors cursor-pointer"
                         >
-                          View Details
+                          {t("viewDetails")}
                         </button>
                       </div>
                     )}
@@ -251,11 +253,10 @@ export default function Certification() {
             })}
           </div>
 
-          {/* Right Panel */}
           <aside className="w-full lg:w-72 shrink-0 space-y-4">
             <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-xs">
               <p className="font-semibold text-neutral-900 text-sm mb-3">
-                Key Requirements
+                {t("keyRequirements")}
               </p>
               <ul className="space-y-2.5">
                 {(journey?.keyRequirements || []).map((req) => (
@@ -275,7 +276,7 @@ export default function Certification() {
 
             <div className="bg-white border border-neutral-200 rounded-xl p-5 shadow-xs">
               <p className="font-semibold text-neutral-900 text-sm mb-3">
-                Reference Clauses
+                {t("referenceClauses")}
               </p>
               <div className="space-y-3">
                 {(journey?.referenceClauses || []).map((clause) => (
@@ -295,7 +296,7 @@ export default function Certification() {
             className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 border border-neutral-300 rounded-lg px-4 py-2.5 hover:bg-white transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            Download Checklist
+            {t("downloadChecklist")}
           </button>
           <button
             type="button"
@@ -303,7 +304,7 @@ export default function Certification() {
             className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-neutral-900 rounded-lg px-4 py-2.5 hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             <MessageCircle className="w-4 h-4" />
-            Connect with Expert
+            {t("connectExpert")}
           </button>
         </div>
       </div>

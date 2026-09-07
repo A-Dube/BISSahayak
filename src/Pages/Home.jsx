@@ -15,81 +15,8 @@ import Sidebar from "../Components/Sidebar";
 import LoadingScreen from "../Components/LoadingScreen";
 import { useAuth } from "../context/AuthContext";
 import { useSidebarNav } from "../Utils/Navigation";
+import { useLanguage } from "../context/LanguageContext";
 import api from "../services/authService";
-
-const MOCK_NEWS = [
-  {
-    id: "news-1",
-    tag: "ALERT",
-    date: "Oct 24, 2023",
-    title: "Mandatory Certification for Footwear",
-    summary:
-      "QCO implementation date for footwear products extended. Check updated guidelines for compliance.",
-  },
-  {
-    id: "news-2",
-    tag: "UPDATE",
-    date: "Oct 20, 2023",
-    title: "Revision of IS 10500: Drinking Water",
-    summary:
-      "New amendments published regarding heavy metal limits. Effective from next month.",
-  },
-];
-
-const MOCK_ACTIVITY = [
-  {
-    id: "act-1",
-    type: "standard",
-    title: "IS 1293: Plugs and Socket-Outlets",
-    description: "Viewed standard details and testing requirements.",
-    timestamp: "2 hours ago",
-  },
-  {
-    id: "act-2",
-    type: "chat",
-    title: '"What is the fee for factory inspection?"',
-    description: "AI Assistant chat query regarding Scheme-I.",
-    timestamp: "Yesterday",
-  },
-  {
-    id: "act-3",
-    type: "document",
-    title: "IS 456: Plain and Reinforced Concrete",
-    description: "Downloaded PDF document.",
-    timestamp: "Oct 21, 2023",
-  },
-];
-
-const QUICK_SERVICES = [
-  {
-    key: "verify-huid",
-    icon: LucideGrid2X2,
-    title: "Verify HUID",
-    desc: "Check authenticity of hallmarked jewellery.",
-    path: "/hallmarking/verify",
-  },
-  {
-    key: "check-is-mark",
-    icon: CheckCircle2,
-    title: "Check IS Mark",
-    desc: "Verify licenses and IS mark validity.",
-    path: "/certification/verify",
-  },
-  {
-    key: "product-finder",
-    icon: Search,
-    title: "Product Finder",
-    desc: "Search standards by product category.",
-    path: "/standards",
-  },
-  {
-    key: "cert-help",
-    icon: HelpCircle,
-    title: "Cert Help",
-    desc: "Guide for certification process.",
-    path: "/certification",
-  },
-];
 
 const ACTIVITY_ICON = {
   standard: Clock,
@@ -101,9 +28,11 @@ export default function Home() {
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
+
   const [query, setQuery] = useState("");
-  const [news, setNews] = useState(MOCK_NEWS);
-  const [activity, setActivity] = useState(MOCK_ACTIVITY);
+  const [news, setNews] = useState([]);
+  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -129,18 +58,97 @@ export default function Home() {
     };
   }, [user?.id]);
 
+  const displayedNews =
+    news.length > 0
+      ? news
+      : [
+          {
+            id: "news-1",
+            tag: t("alert"),
+            date: "Oct 24, 2023",
+            title: t("defaultNews1Title"),
+            summary: t("defaultNews1Summary"),
+          },
+          {
+            id: "news-2",
+            tag: t("update"),
+            date: "Oct 20, 2023",
+            title: t("defaultNews2Title"),
+            summary: t("defaultNews2Summary"),
+          },
+        ];
+
+  const displayedActivity =
+    activity.length > 0
+      ? activity
+      : [
+          {
+            id: "act-1",
+            type: "standard",
+            title: t("defaultAct1Title"),
+            description: t("defaultAct1Desc"),
+            timestamp: t("defaultAct1Time"),
+          },
+          {
+            id: "act-2",
+            type: "chat",
+            title: t("defaultAct2Title"),
+            description: t("defaultAct2Desc"),
+            timestamp: t("defaultAct2Time"),
+          },
+          {
+            id: "act-3",
+            type: "document",
+            title: t("defaultAct3Title"),
+            description: t("defaultAct3Desc"),
+            timestamp: t("defaultAct3Time"),
+          },
+        ];
+
+  const quickServices = [
+    {
+      key: "verify-huid",
+      icon: LucideGrid2X2,
+      title: t("verifyHuidTitle"),
+      desc: t("verifyHuidDesc"),
+      path: "/hallmarking/verify",
+    },
+    {
+      key: "check-is-mark",
+      icon: CheckCircle2,
+      title: t("checkIsMarkTitle"),
+      desc: t("checkIsMarkDesc"),
+      path: "/certification/verify",
+    },
+    {
+      key: "product-finder",
+      icon: Search,
+      title: t("productFinderTitle"),
+      desc: t("productFinderDesc"),
+      path: "/standards",
+    },
+    {
+      key: "cert-help",
+      icon: HelpCircle,
+      title: t("certHelpTitle"),
+      desc: t("certHelpDesc"),
+      path: "/certification",
+    },
+  ];
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-    navigate(`/standards?q=${encodeURIComponent(query.trim())}`);
+    sessionStorage.setItem("initialQuestion", query.trim());
+    navigate("/assistant");
   };
 
   if (loading) {
-    return <LoadingScreen message="Loading dashboard & updates..." />;
+    return <LoadingScreen message={t("loadingDashboard")} />;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50/50 flex">
+    <div className="min-h-screen bg-neutral-50/50 flex font-sans">
       <Sidebar
         active="home"
         onNavigate={onNavigate}
@@ -148,30 +156,30 @@ export default function Home() {
         onLogout={logout}
       />
 
-      <main className="flex-1 min-w-0 p-8 lg:p-12">
+      <main className="flex-1 min-w-0 p-8 lg:p-12 overflow-y-auto">
         <div className="text-center max-w-2xl mx-auto mb-10 pt-4">
           <h1 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight">
-            How can I help you today?
+            {t("heroTitle")}
           </h1>
           <p className="text-sm text-neutral-500 mt-2">
-            Ask about ISI Mark, HUID, or search standards.
+            {t("heroSubtitle")}
           </p>
 
           <form
             onSubmit={handleSearch}
-            className="mt-6 flex items-center gap-3 bg-white border border-neutral-200 rounded-full px-5 py-2.5 shadow-sm hover:border-neutral-300 transition-colors"
+            className="mt-6 flex items-center gap-3 bg-white border border-neutral-200 rounded-full px-5 py-2.5 shadow-sm hover:border-neutral-300 focus-within:ring-2 focus-within:ring-emerald-600/10 focus-within:border-emerald-600 transition-all"
           >
             <Search className="w-4 h-4 text-neutral-400 shrink-0" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g., How to apply for ISI mark for cement?"
+              placeholder={t("searchPlaceholder")}
               className="flex-1 bg-transparent text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
             />
             <button
               type="submit"
-              className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+              className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
               aria-label="Search"
             >
               <Mic className="w-4 h-4" />
@@ -183,12 +191,13 @@ export default function Home() {
           <div className="lg:col-span-2 space-y-8">
             <section>
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">
-                Quick Services
+                {t("quickServices")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {QUICK_SERVICES.map(({ key, icon: Icon, title, desc, path }) => (
+                {quickServices.map(({ key, icon: Icon, title, desc, path }) => (
                   <button
                     key={key}
+                    type="button"
                     onClick={() => navigate(path)}
                     className="text-left bg-white border border-neutral-200 rounded-2xl p-5 hover:border-emerald-500 hover:shadow-sm transition-all group cursor-pointer"
                   >
@@ -207,21 +216,23 @@ export default function Home() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-neutral-900">
-                  News &amp; Amendments
+                  {t("newsAmendments")}
                 </h2>
                 <button
-                  onClick={() => navigate(null)}
-                  className="text-md font-semibold text-emerald-600 hover:text-emerald-700"
+                  type="button"
+                  onClick={() => onNavigate?.("standards")}
+                  className="text-md font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                 >
-                  View All
+                  {t("viewAll")}
                 </button>
               </div>
 
               <div className="space-y-3">
-                {news.map((item) => (
+                {displayedNews.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => navigate(null)}
+                    type="button"
+                    onClick={() => onNavigate?.("standards")}
                     className="w-full text-left flex items-center justify-between gap-4 bg-white border border-neutral-200 rounded-2xl p-5 hover:border-neutral-300 hover:shadow-sm transition-all cursor-pointer"
                   >
                     <div className="min-w-0 flex-1">
@@ -229,7 +240,7 @@ export default function Home() {
                         <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
                         <span
                           className={`text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${
-                            item.tag === "ALERT"
+                            item.tag === "ALERT" || item.tag === t("alert")
                               ? "bg-red-50 text-red-600"
                               : "bg-emerald-50 text-emerald-600"
                           }`}
@@ -255,11 +266,11 @@ export default function Home() {
           <aside className="lg:col-span-1">
             <div className="bg-neutral-950 rounded-2xl p-6 text-white sticky top-8 shadow-sm min-h-28">
               <h3 className="font-semibold text-lg mb-6 text-neutral-100">
-                Recent Activity
+                {t("recentActivity")}
               </h3>
 
               <div className="space-y-6">
-                {activity.map((item) => {
+                {displayedActivity.map((item) => {
                   const Icon = ACTIVITY_ICON[item.type] || Clock;
                   return (
                     <div key={item.id} className="flex gap-3.5 items-start">
@@ -283,10 +294,11 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => navigate(null)}
+                type="button"
+                onClick={() => onNavigate?.("assistant")}
                 className="w-full mt-8 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold rounded-xl py-2.5 transition-colors cursor-pointer"
               >
-                View All History
+                {t("viewAllHistory")}
               </button>
             </div>
           </aside>

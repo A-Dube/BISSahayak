@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef } from "react";
-import {Home, MessageSquare, FileText, CheckCircle2, FlaskConical, Award, User, HelpCircle, LogOut, Plus, MoreVertical, Share2, Pin, Pencil, Trash2,} from "lucide-react";
+import {
+  Home,
+  MessageSquare,
+  FileText,
+  CheckCircle2,
+  FlaskConical,
+  Award,
+  User,
+  HelpCircle,
+  LogOut,
+  Plus,
+  MoreVertical,
+  Share2,
+  Pin,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import bisLogo from "../assets/BIS logo.png";
-
-const NAV_ITEMS = [
-  { key: "home", label: "Home", icon: Home },
-  { key: "assistant", label: "AI Assistant", icon: MessageSquare },
-  { key: "standards", label: "Standards", icon: FileText },
-  { key: "certification", label: "Certification", icon: CheckCircle2 },
-  { key: "labs", label: "Testing Labs", icon: FlaskConical },
-  { key: "hallmarking", label: "Hallmarking", icon: Award },
-];
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Sidebar({
   active = "home",
@@ -25,8 +33,18 @@ export default function Sidebar({
   onRenameChat,
   onDeleteChat,
 }) {
+  const { t } = useLanguage();
   const [menuOpenChatId, setMenuOpenChatId] = useState(null);
   const menuRef = useRef(null);
+
+  const NAV_ITEMS = [
+    { key: "home", label: t("home"), icon: Home },
+    { key: "assistant", label: t("assistant"), icon: MessageSquare },
+    { key: "standards", label: t("standards"), icon: FileText },
+    { key: "certification", label: t("certification"), icon: CheckCircle2 },
+    { key: "labs", label: t("labs"), icon: FlaskConical },
+    { key: "hallmarking", label: t("hallmarking"), icon: Award },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -63,7 +81,7 @@ export default function Sidebar({
             BIS Sahayak
           </p>
           <p className="text-[11px] font-medium text-neutral-400 tracking-wider leading-tight mt-0.5">
-            OFFICIAL AI ASSISTANT
+            {t("officialAssistant")}
           </p>
         </div>
       </div>
@@ -75,7 +93,7 @@ export default function Sidebar({
           className="w-full flex items-center justify-center gap-1.5 bg-[#0d234f] hover:bg-[#091837] text-white text-xs font-semibold rounded-full py-2.5 transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          Start Certification
+          {t("startCertification")}
         </button>
       </div>
 
@@ -99,106 +117,110 @@ export default function Sidebar({
           );
         })}
 
-        {active === "assistant" && activeChats.length > 0 && (
-          <div className="pt-5 pb-2">
-            <p className="px-3 text-[10px] font-bold text-neutral-400 tracking-wider uppercase mb-2">
-              Recent Chats
-            </p>
-
-            <div className="space-y-1 pr-1">
-              {activeChats.map((chat) => {
-                const chatId = chat.id || chat._id;
-                const isActiveChat = chatId === activeChatId;
-                const isMenuOpen = menuOpenChatId === chatId;
-                const displayTitle = chat.title || chat.name || "Chat";
-
-                return (
-                  <div
-                    key={chatId}
-                    className={`group relative flex items-center justify-between rounded-lg text-xs transition-colors ${
-                      isActiveChat
-                        ? "bg-neutral-200/80 text-neutral-900 font-semibold"
-                        : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
-                    } ${isMenuOpen ? "z-30" : "z-0"}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onSelectChat?.(chatId)}
-                      title={displayTitle}
-                      className="flex-1 text-left truncate px-3 py-2 cursor-pointer"
-                    >
-                      {displayTitle}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpenChatId(isMenuOpen ? null : chatId);
-                      }}
-                      className={`p-1.5 mr-1 rounded-md transition-opacity cursor-pointer ${
-                        isMenuOpen
-                          ? "opacity-100 bg-neutral-300/60 text-neutral-800"
-                          : "opacity-0 group-hover:opacity-100 hover:bg-neutral-200 text-neutral-400 hover:text-neutral-700"
-                      }`}
-                      aria-label="Chat options"
-                    >
-                      <MoreVertical className="w-3.5 h-3.5" />
-                    </button>
-
-                    {isMenuOpen && (
-                      <div
-                        ref={menuRef}
-                        className="absolute right-1 top-full mt-1 w-44 bg-white border border-neutral-200 rounded-xl shadow-xl p-1 z-50 text-neutral-700"
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => handleAction(e, onShareChat, chatId)}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
-                        >
-                          <Share2 className="w-3.5 h-3.5 text-neutral-400" />
-                          Share conversation
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => handleAction(e, onPinChat, chatId)}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
-                        >
-                          <Pin className="w-3.5 h-3.5 text-neutral-400" />
-                          Pin
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => handleAction(e, onRenameChat, chatId)}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-neutral-400" />
-                          Rename
-                        </button>
-                        <div className="h-px bg-neutral-100 my-1" />
-                        <button
-                          type="button"
-                          onClick={(e) => handleAction(e, onDeleteChat, chatId)}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 text-xs font-normal transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
+        {active === "assistant" && (
+          <div className="pt-4 pb-2">
             <button
               type="button"
               onClick={onNewChat}
-              className="w-full flex items-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2 px-3 py-2 mb-3 rounded-lg text-xs font-semibold text-neutral-700 bg-neutral-100/80 hover:bg-neutral-200/70 hover:text-neutral-900 transition-colors cursor-pointer border border-neutral-200/60"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-neutral-400" />
-              New Chat
+              <Plus className="w-3.5 h-3.5 text-neutral-500 stroke-[2.5]" />
+              {t("newChat")}
             </button>
+
+            {activeChats.length > 0 && (
+              <>
+                <p className="px-3 text-[10px] font-bold text-neutral-400 tracking-wider uppercase mb-2">
+                  {t("recentChats")}
+                </p>
+
+                <div className="space-y-1 pr-1">
+                  {activeChats.map((chat) => {
+                    const chatId = chat.id || chat._id;
+                    const isActiveChat = chatId === activeChatId;
+                    const isMenuOpen = menuOpenChatId === chatId;
+                    const displayTitle = chat.title || chat.name || t("chat");
+
+                    return (
+                      <div
+                        key={chatId}
+                        className={`group relative flex items-center justify-between rounded-lg text-xs transition-colors ${
+                          isActiveChat
+                            ? "bg-neutral-200/80 text-neutral-900 font-semibold"
+                            : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
+                        } ${isMenuOpen ? "z-30" : "z-0"}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onSelectChat?.(chatId)}
+                          title={displayTitle}
+                          className="flex-1 text-left truncate px-3 py-2 cursor-pointer"
+                        >
+                          {displayTitle}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpenChatId(isMenuOpen ? null : chatId);
+                          }}
+                          className={`p-1.5 mr-1 rounded-md transition-opacity cursor-pointer ${
+                            isMenuOpen
+                              ? "opacity-100 bg-neutral-300/60 text-neutral-800"
+                              : "opacity-0 group-hover:opacity-100 hover:bg-neutral-200 text-neutral-400 hover:text-neutral-700"
+                          }`}
+                          aria-label={t("chatOptions")}
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+
+                        {isMenuOpen && (
+                          <div
+                            ref={menuRef}
+                            className="absolute right-1 top-full mt-1 w-44 bg-white border border-neutral-200 rounded-xl shadow-xl p-1 z-50 text-neutral-700"
+                          >
+                            <button
+                              type="button"
+                              onClick={(e) => handleAction(e, onShareChat, chatId)}
+                              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
+                            >
+                              <Share2 className="w-3.5 h-3.5 text-neutral-400" />
+                              {t("shareConversation")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleAction(e, onPinChat, chatId)}
+                              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
+                            >
+                              <Pin className="w-3.5 h-3.5 text-neutral-400" />
+                              {t("pin")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleAction(e, onRenameChat, chatId)}
+                              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 text-xs font-normal transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-neutral-400" />
+                              {t("rename")}
+                            </button>
+                            <div className="h-px bg-neutral-100 my-1" />
+                            <button
+                              type="button"
+                              onClick={(e) => handleAction(e, onDeleteChat, chatId)}
+                              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 text-xs font-normal transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              {t("delete")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
       </nav>
@@ -207,26 +229,26 @@ export default function Sidebar({
         <button
           type="button"
           onClick={() => onNavigate?.("profile")}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors cursor-pointer"
         >
           <User className="w-4 h-4" />
-          Profile
+          {t("profile")}
         </button>
         <button
           type="button"
           onClick={() => onNavigate?.("help")}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors cursor-pointer"
         >
           <HelpCircle className="w-4 h-4" />
-          Help
+          {t("help")}
         </button>
         <button
           type="button"
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
-          Logout
+          {t("logout")}
         </button>
       </div>
     </aside>

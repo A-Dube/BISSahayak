@@ -19,7 +19,13 @@ import StandardCard from "../Components/StandardCard";
 import LoadingScreen from "../Components/LoadingScreen";
 import { useAuth } from "../context/AuthContext";
 import { useSidebarNav } from "../Utils/Navigation";
+import { useLanguage } from "../context/LanguageContext";
 import api from "../services/api.service";
+
+const languageLocales = {
+  English: "en-IN",
+  Hindi: "hi-IN",
+};
 
 const extractUrl = (source) => {
   if (!source) return null;
@@ -34,6 +40,7 @@ export default function AiAssistant() {
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
   const { user, logout } = useAuth();
+  const { language, t } = useLanguage();
 
   const [chats, setChats] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
@@ -52,11 +59,7 @@ export default function AiAssistant() {
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const starterQuestions = [
-    "What are the main activities of BIS?",
-    "What is the ISI Mark?",
-    "Show me standards for plugs and sockets",
-  ];
+  const starterQuestions = [t("q1"), t("q2"), t("q3")];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -97,9 +100,7 @@ export default function AiAssistant() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err.response?.data?.message || "Failed to initialize conversation."
-          );
+          setError(err.response?.data?.message || t("initChatError"));
         }
       } finally {
         if (!cancelled) setPageLoading(false);
@@ -165,7 +166,7 @@ export default function AiAssistant() {
       setOpenSources({});
       setChats((prev) => [newConv, ...prev.filter((c) => c._id !== newId)]);
     } catch {
-      setError("Unable to create a new conversation.");
+      setError(t("newChatError"));
     }
   };
 
@@ -180,7 +181,7 @@ export default function AiAssistant() {
         convId = newConvRes.data?.conversation?._id;
         setActiveConversationId(convId);
       } catch {
-        setError("Conversation session is not ready.");
+        setError(t("sessionNotReady"));
         return;
       }
     }
@@ -191,10 +192,16 @@ export default function AiAssistant() {
     setSending(true);
     setError("");
 
+    const promptWithLanguage =
+      language && language !== "English"
+        ? `${text} (Please reply strictly in ${language})`
+        : text;
+
     try {
       const res = await api.post("/chat", {
         conversationId: convId,
-        question: text,
+        question: promptWithLanguage,
+        language,
       });
 
       const data = res.data;
@@ -213,9 +220,7 @@ export default function AiAssistant() {
         setChats(convsRes.data.conversations);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to process ML response."
-      );
+      setError(err.response?.data?.message || t("mlError"));
     } finally {
       setSending(false);
       setSelectedFile(null);
@@ -234,7 +239,7 @@ export default function AiAssistant() {
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setError("Voice recognition is only supported in Chrome/Edge.");
+      setError(t("voiceSupportError"));
       return;
     }
 
@@ -244,7 +249,7 @@ export default function AiAssistant() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-IN";
+    recognition.lang = languageLocales[language] || "en-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -256,12 +261,14 @@ export default function AiAssistant() {
     recognition.onresult = (event) => {
       const transcript = event.results?.[0]?.[0]?.transcript?.trim();
       if (transcript) {
-        setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript));
+        setInput((prev) =>
+          prev.trim() ? `${prev.trim()} ${transcript}` : transcript
+        );
       }
     };
 
     recognition.onerror = () => {
-      setError("Voice input error. Check microphone permissions.");
+      setError(t("voiceInputError"));
       setIsListening(false);
     };
 
@@ -278,7 +285,7 @@ export default function AiAssistant() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be under 10 MB.");
+      setError(t("fileSizeError"));
       e.target.value = "";
       return;
     }
@@ -287,7 +294,7 @@ export default function AiAssistant() {
   };
 
   if (pageLoading) {
-    return <LoadingScreen message="Preparing your secure conversation..." />;
+    return <LoadingScreen message={t("preparingChat")} />;
   }
 
   return (
@@ -312,12 +319,11 @@ export default function AiAssistant() {
               </div>
 
               <h1 className="text-4xl font-semibold text-neutral-800 tracking-tight mb-3">
-                How can I help you today?
+                {t("assistantGreeting")}
               </h1>
 
               <p className="text-neutral-500 text-sm max-w-lg mb-8 leading-relaxed">
-                Ask about Indian Standards, certification, ISI Mark, HUID,
-                testing requirements, or BIS services.
+                {t("assistantSubtext")}
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2.5">
@@ -343,27 +349,32 @@ export default function AiAssistant() {
                     </div>
                   </div>
                 ) : (
-                  <div key={msg.id} className="flex flex-col gap-3 items-start w-full">
+                  <div
+                    key={msg.id}
+                    className="flex flex-col gap-3 items-start w-full"
+                  >
                     {msg.text && (
                       <div className="bg-white border border-neutral-200 text-neutral-800 text-sm leading-relaxed rounded-2xl rounded-tl-sm px-6 py-4 max-w-2xl shadow-xs relative group">
                         <div className="whitespace-pre-wrap">
-                          {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
-                            if (/^https?:\/\/[^\s]+$/.test(part)) {
-                              const cleanUrl = part.replace(/[.,;)]+$/, "");
-                              return (
-                                <a
-                                  key={index}
-                                  href={cleanUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-emerald-700 underline font-medium hover:text-emerald-900 break-all"
-                                >
-                                  {cleanUrl}
-                                </a>
-                              );
-                            }
-                            return part;
-                          })}
+                          {msg.text
+                            .split(/(https?:\/\/[^\s]+)/g)
+                            .map((part, index) => {
+                              if (/^https?:\/\/[^\s]+$/.test(part)) {
+                                const cleanUrl = part.replace(/[.,;)]+$/, "");
+                                return (
+                                  <a
+                                    key={index}
+                                    href={cleanUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-700 underline font-medium hover:text-emerald-900 break-all"
+                                  >
+                                    {cleanUrl}
+                                  </a>
+                                );
+                              }
+                              return part;
+                            })}
                         </div>
 
                         <button
@@ -391,7 +402,9 @@ export default function AiAssistant() {
                           }
                           className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-neutral-700 bg-neutral-50/70 hover:bg-neutral-100 transition-colors"
                         >
-                          <span>Sources ({msg.sources.length})</span>
+                          <span>
+                            {t("sourcesCount")} ({msg.sources.length})
+                          </span>
                           <ChevronDown
                             className={`w-4 h-4 transition-transform ${
                               openSources[msg.id] ? "rotate-180" : ""
@@ -431,11 +444,11 @@ export default function AiAssistant() {
                                       className="inline-flex items-center gap-1.5 text-emerald-700 bg-white border border-emerald-300 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors shrink-0 shadow-xs"
                                     >
                                       <SearchIcon className="w-3 h-3" />
-                                      Open Link
+                                      {t("openLink")}
                                     </a>
                                   ) : (
                                     <span className="text-neutral-400 text-[11px] shrink-0">
-                                      Reference
+                                      {t("reference")}
                                     </span>
                                   )}
                                 </div>
@@ -461,7 +474,8 @@ export default function AiAssistant() {
                               : msg.standard.confidence
                           }
                           onDownloadPdf={() =>
-                            msg.standard.pdfUrl && window.open(msg.standard.pdfUrl, "_blank")
+                            msg.standard.pdfUrl &&
+                            window.open(msg.standard.pdfUrl, "_blank")
                           }
                         />
                       </div>
@@ -474,7 +488,7 @@ export default function AiAssistant() {
                 <div className="flex justify-start">
                   <div className="bg-white border border-neutral-200 text-neutral-500 text-xs rounded-2xl px-5 py-3 shadow-xs flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                    BIS Sahayak is querying standards registry...
+                    {t("queryingRegistry")}
                   </div>
                 </div>
               )}
@@ -496,8 +510,12 @@ export default function AiAssistant() {
             <div className="flex items-center justify-between bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs shadow-xs">
               <div className="flex items-center gap-2 truncate">
                 <FileIcon className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-medium text-neutral-800 truncate">{selectedFile.name}</span>
-                <span className="text-neutral-400">({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <span className="font-medium text-neutral-800 truncate">
+                  {selectedFile.name}
+                </span>
+                <span className="text-neutral-400">
+                  ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
               </div>
               <button
                 type="button"
@@ -542,8 +560,8 @@ export default function AiAssistant() {
             onChange={(e) => setInput(e.target.value)}
             placeholder={
               selectedFile
-                ? "Ask something about the selected document..."
-                : "Ask about standards, certification processes, or upload documents for review..."
+                ? t("docPlaceholder")
+                : t("assistantInputPlaceholder")
             }
             className="flex-1 bg-transparent text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none py-1.5"
           />
@@ -552,11 +570,17 @@ export default function AiAssistant() {
             type="button"
             onClick={startVoiceInput}
             className={`p-2 rounded-full transition-colors cursor-pointer ${
-              isListening ? "bg-red-50 text-red-500" : "text-neutral-400 hover:text-neutral-600"
+              isListening
+                ? "bg-red-50 text-red-500"
+                : "text-neutral-400 hover:text-neutral-600"
             }`}
             title={isListening ? "Stop listening" : "Voice input"}
           >
-            {isListening ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isListening ? (
+              <Square className="w-4 h-4" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
           </button>
 
           <button

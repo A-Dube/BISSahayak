@@ -8,12 +8,14 @@ import StandardCard from "../Components/StandardCard";
 import LoadingScreen from "../Components/LoadingScreen";
 import { useSidebarNav } from "../Utils/Navigation";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { searchStandards } from "../services/standardsService";
 
 export default function StandardsPage() {
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
   const { logout } = useAuth();
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -35,10 +37,8 @@ export default function StandardsPage() {
       const data = await searchStandards({ query: searchQuery, filters });
       setResults(Array.isArray(data?.results) ? data.results : []);
       setTotal(data?.total ?? (data?.results || []).length);
-    } catch (err) {
-      setError(
-        "Standards search isn't live yet — waiting on the backend endpoint."
-      );
+    } catch {
+      setError(t("standardsSearchNotLive"));
       setResults([]);
       setTotal(0);
     } finally {
@@ -66,12 +66,12 @@ export default function StandardsPage() {
   };
 
   if (loading && !hasSearched) {
-    return <LoadingScreen message="Searching standards database..." />;
+    return <LoadingScreen message={t("searchingDb")} />;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
-      {loading && <LoadingScreen message="Fetching latest standards..." />}
+    <div className="min-h-screen bg-neutral-50 flex font-sans">
+      {loading && <LoadingScreen message={t("fetchingStandards")} />}
 
       <Sidebar
         active="standards"
@@ -88,19 +88,23 @@ export default function StandardsPage() {
           <div className="flex items-end justify-between mb-5">
             <div>
               <h1 className="text-3xl font-bold text-neutral-900">
-                Search Results
+                {t("searchResults")}
               </h1>
               <p className="text-sm text-neutral-500 mt-1">
                 {hasSearched
-                  ? `Found ${total} standard${total === 1 ? "" : "s"} related to '${query}'`
-                  : "Search above to find applicable standards."}
+                  ? t("foundResultsText", {
+                      total,
+                      plural: total === 1 ? "" : "s",
+                      query,
+                    })
+                  : t("searchPrompt")}
               </p>
             </div>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 text-sm text-neutral-700"
+              className="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer"
             >
-              Sort by: <span className="font-semibold">Relevance</span>
+              {t("sortBy")} <span className="font-semibold">{t("relevance")}</span>
               <ChevronDown className="w-4 h-4" />
             </button>
           </div>
@@ -114,9 +118,9 @@ export default function StandardsPage() {
           {!loading && !error && hasSearched && results.length === 0 && (
             <div className="flex flex-col items-center text-center py-20 text-neutral-400">
               <SearchX className="w-8 h-8 mb-3" />
-              <p className="font-medium text-neutral-600">No standards found</p>
+              <p className="font-medium text-neutral-600">{t("noStandardsFound")}</p>
               <p className="text-sm mt-1">
-                Try a different search term or adjust your filters.
+                {t("adjustFilters")}
               </p>
             </div>
           )}
