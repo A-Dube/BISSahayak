@@ -109,7 +109,7 @@ export default function Signup({ onSignIn }) {
     if (onSignIn) {
       onSignIn();
     } else {
-      navigate("/login");
+      navigate("/login"); // Fixed: Routes to login page instead of home
     }
   };
 
