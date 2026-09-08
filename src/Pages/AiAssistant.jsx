@@ -75,25 +75,33 @@ export default function AiAssistant() {
 
         const res = await api.get("/conversations");
         const list = res.data?.conversations || [];
+
         if (cancelled) return;
+
+        // Keep all old chats in history
         setChats(list);
 
-        let activeId = null;
-        if (list.length > 0) {
-          activeId = list[0]._id;
-        } else {
-          const newConvRes = await api.post("/conversations", {});
-          const newConv = newConvRes.data?.conversation;
-          activeId = newConv?._id;
-          if (newConv) setChats([newConv]);
+        // ALWAYS create a NEW chat when Assistant opens
+        const newConvRes = await api.post("/conversations", {});
+        const newConv = newConvRes.data?.conversation;
+        const activeId = newConv?._id;
+
+        if (cancelled) return;
+
+        if (newConv) {
+          setChats((prev) => [
+            newConv,
+            ...prev.filter((c) => c._id !== activeId),
+          ]);
         }
 
         if (activeId) {
           setActiveConversationId(activeId);
-          await loadMessages(activeId);
+          setMessages([]);
         }
 
         const storedQuestion = sessionStorage.getItem("initialQuestion");
+
         if (storedQuestion && activeId) {
           sessionStorage.removeItem("initialQuestion");
           handleSendMessage(storedQuestion, activeId);
@@ -117,8 +125,10 @@ export default function AiAssistant() {
 
   const loadMessages = async (conversationId) => {
     if (!conversationId) return;
+
     try {
       const res = await api.get(`/conversations/${conversationId}/messages`);
+
       const backendMessages =
         res.data?.messages ||
         res.data?.conversation?.messages ||
@@ -134,7 +144,9 @@ export default function AiAssistant() {
       }));
 
       setMessages(formatted);
-      setOpenSources({});
+
+      // Do NOT reset openSources here
+      // This keeps source state when opening chats from history
     } catch {
       setMessages([]);
     }
@@ -142,17 +154,21 @@ export default function AiAssistant() {
 
   const handleSelectChat = async (convId) => {
     if (sending || activeConversationId === convId) return;
+
     setActiveConversationId(convId);
     setMessages([]);
     setError("");
     setSelectedFile(null);
+
     await loadMessages(convId);
   };
 
   const handleStartNewChat = async () => {
     if (sending) return;
+
     try {
       setError("");
+
       const res = await api.post("/conversations", {});
       const newConv = res.data?.conversation;
       const newId = newConv?._id;
@@ -164,7 +180,11 @@ export default function AiAssistant() {
       setInput("");
       setSelectedFile(null);
       setOpenSources({});
-      setChats((prev) => [newConv, ...prev.filter((c) => c._id !== newId)]);
+
+      setChats((prev) => [
+        newConv,
+        ...prev.filter((c) => c._id !== newId),
+      ]);
     } catch {
       setError(t("newChatError"));
     }
@@ -172,9 +192,11 @@ export default function AiAssistant() {
 
   const handleSendMessage = async (textToSend, targetConvId) => {
     const text = (textToSend || input).trim();
+
     if (!text || sending) return;
 
     let convId = targetConvId || activeConversationId;
+
     if (!convId) {
       try {
         const newConvRes = await api.post("/conversations", {});
@@ -186,7 +208,12 @@ export default function AiAssistant() {
       }
     }
 
-    const userMsg = { id: Date.now(), role: "user", text };
+    const userMsg = {
+      id: Date.now(),
+      role: "user",
+      text,
+    };
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setSending(true);
@@ -205,6 +232,7 @@ export default function AiAssistant() {
       });
 
       const data = res.data;
+
       const assistantMsg = {
         id: Date.now() + 1,
         role: "assistant",
@@ -216,6 +244,7 @@ export default function AiAssistant() {
       setMessages((prev) => [...prev, assistantMsg]);
 
       const convsRes = await api.get("/conversations");
+
       if (convsRes.data?.conversations) {
         setChats(convsRes.data.conversations);
       }
@@ -224,13 +253,17 @@ export default function AiAssistant() {
     } finally {
       setSending(false);
       setSelectedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+
     setTimeout(() => setCopiedId(null), 1500);
   };
 
@@ -249,6 +282,7 @@ export default function AiAssistant() {
     }
 
     const recognition = new SpeechRecognition();
+
     recognition.lang = languageLocales[language] || "en-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -259,10 +293,14 @@ export default function AiAssistant() {
     };
 
     recognition.onresult = (event) => {
-      const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+      const transcript =
+        event.results?.[0]?.[0]?.transcript?.trim();
+
       if (transcript) {
         setInput((prev) =>
-          prev.trim() ? `${prev.trim()} ${transcript}` : transcript
+          prev.trim()
+            ? `${prev.trim()} ${transcript}`
+            : transcript
         );
       }
     };
@@ -283,12 +321,15 @@ export default function AiAssistant() {
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
+
     if (file.size > 10 * 1024 * 1024) {
       setError(t("fileSizeError"));
       e.target.value = "";
       return;
     }
+
     setError("");
     setSelectedFile(file);
   };
@@ -359,8 +400,14 @@ export default function AiAssistant() {
                           {msg.text
                             .split(/(https?:\/\/[^\s]+)/g)
                             .map((part, index) => {
-                              if (/^https?:\/\/[^\s]+$/.test(part)) {
-                                const cleanUrl = part.replace(/[.,;)]+$/, "");
+                              if (
+                                /^https?:\/\/[^\s]+$/.test(part)
+                              ) {
+                                const cleanUrl = part.replace(
+                                  /[.,;)]+$/,
+                                  ""
+                                );
+
                                 return (
                                   <a
                                     key={index}
@@ -373,12 +420,15 @@ export default function AiAssistant() {
                                   </a>
                                 );
                               }
+
                               return part;
                             })}
                         </div>
 
                         <button
-                          onClick={() => handleCopy(msg.text, msg.id)}
+                          onClick={() =>
+                            handleCopy(msg.text, msg.id)
+                          }
                           className="absolute top-3 right-3 text-neutral-400 hover:text-emerald-600 transition-colors cursor-pointer"
                           title="Copy message"
                         >
@@ -405,9 +455,12 @@ export default function AiAssistant() {
                           <span>
                             {t("sourcesCount")} ({msg.sources.length})
                           </span>
+
                           <ChevronDown
                             className={`w-4 h-4 transition-transform ${
-                              openSources[msg.id] ? "rotate-180" : ""
+                              openSources[msg.id]
+                                ? "rotate-180"
+                                : ""
                             }`}
                           />
                         </button>
@@ -416,10 +469,13 @@ export default function AiAssistant() {
                           <div className="p-3 space-y-2 border-t border-neutral-100">
                             {msg.sources.map((src, i) => {
                               const url = extractUrl(src);
+
                               const name =
                                 typeof src === "string"
                                   ? src
-                                  : src.name || src.title || `Source ${i + 1}`;
+                                  : src.name ||
+                                    src.title ||
+                                    `Source ${i + 1}`;
 
                               return (
                                 <div
@@ -428,6 +484,7 @@ export default function AiAssistant() {
                                 >
                                   <div className="flex items-center gap-2 truncate mr-3 min-w-0">
                                     <FileIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+
                                     <span
                                       className="truncate font-medium text-neutral-800"
                                       title={name}
@@ -462,20 +519,33 @@ export default function AiAssistant() {
                     {msg.standard && (
                       <div className="w-full max-w-3xl mt-2">
                         <StandardCard
-                          code={msg.standard.code || "IS 0000:0000"}
-                          status={msg.standard.status || "Active"}
+                          code={
+                            msg.standard.code || "IS 0000:0000"
+                          }
+                          status={
+                            msg.standard.status || "Active"
+                          }
                           category={msg.standard.category}
-                          title={msg.standard.title || "Standard Result"}
-                          description={msg.standard.description}
+                          title={
+                            msg.standard.title ||
+                            "Standard Result"
+                          }
+                          description={
+                            msg.standard.description
+                          }
                           aiInsight={msg.standard.aiInsight}
                           relevanceMatch={
-                            typeof msg.standard.relevanceMatch === "number"
+                            typeof msg.standard.relevanceMatch ===
+                            "number"
                               ? msg.standard.relevanceMatch
                               : msg.standard.confidence
                           }
                           onDownloadPdf={() =>
                             msg.standard.pdfUrl &&
-                            window.open(msg.standard.pdfUrl, "_blank")
+                            window.open(
+                              msg.standard.pdfUrl,
+                              "_blank"
+                            )
                           }
                         />
                       </div>
@@ -492,6 +562,7 @@ export default function AiAssistant() {
                   </div>
                 </div>
               )}
+
               <div ref={bottomRef} />
             </div>
           )}
@@ -510,18 +581,28 @@ export default function AiAssistant() {
             <div className="flex items-center justify-between bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs shadow-xs">
               <div className="flex items-center gap-2 truncate">
                 <FileIcon className="w-4 h-4 text-emerald-600 shrink-0" />
+
                 <span className="font-medium text-neutral-800 truncate">
                   {selectedFile.name}
                 </span>
+
                 <span className="text-neutral-400">
-                  ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  (
+                  {(selectedFile.size / 1024 / 1024).toFixed(
+                    2
+                  )}{" "}
+                  MB)
                 </span>
               </div>
+
               <button
                 type="button"
                 onClick={() => {
                   setSelectedFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
+
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
                 }}
                 className="text-neutral-400 hover:text-red-500 cursor-pointer p-1"
               >
@@ -546,6 +627,7 @@ export default function AiAssistant() {
           >
             <Paperclip className="w-5 h-5" />
           </button>
+
           <input
             ref={fileInputRef}
             type="file"
@@ -574,7 +656,9 @@ export default function AiAssistant() {
                 ? "bg-red-50 text-red-500"
                 : "text-neutral-400 hover:text-neutral-600"
             }`}
-            title={isListening ? "Stop listening" : "Voice input"}
+            title={
+              isListening ? "Stop listening" : "Voice input"
+            }
           >
             {isListening ? (
               <Square className="w-4 h-4" />
@@ -585,7 +669,9 @@ export default function AiAssistant() {
 
           <button
             type="submit"
-            disabled={sending || (!input.trim() && !selectedFile)}
+            disabled={
+              sending || (!input.trim() && !selectedFile)
+            }
             className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white transition-colors cursor-pointer"
             aria-label="Send"
           >

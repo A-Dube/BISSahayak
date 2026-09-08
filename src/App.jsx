@@ -10,7 +10,8 @@ import StandardsPage from "./Pages/StandardsPage";
 import AiAssistant from "./Pages/AiAssistant";
 import Certification from "./Pages/Certification";
 import ProfileSettings from "./Pages/ProfileSettings";
-
+import TestingLabs from "./Pages/TestingLabs";
+import Verification from "./Pages/Verification";
 function App() {
   return (
     <AuthProvider>
@@ -52,6 +53,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+  path="/labs"
+  element={
+    <ProtectedRoute>
+      <TestingLabs />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/verification"
+  element={
+    <ProtectedRoute>
+      <Verification />
+    </ProtectedRoute>
+  }
+/>
           <Route
             path="/profile"
             element={
