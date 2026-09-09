@@ -347,10 +347,6 @@ function StatusBadge({ status, t }) {
   );
 }
 
-/* =========================================================
-   MAIN COMPONENT
-========================================================= */
-
 export default function Certification() {
   const navigate = useNavigate();
   const onNavigate = useSidebarNav();
@@ -367,10 +363,6 @@ export default function Certification() {
 
   const [productsLoading, setProductsLoading] = useState(true);
   const [journeyLoading, setJourneyLoading] = useState(false);
-
-  /* =======================================================
-     HELPERS
-  ======================================================= */
 
   const getProductId = (product) => {
     if (!product) return null;
@@ -422,9 +414,6 @@ export default function Certification() {
     );
   };
 
-  /* =======================================================
-     FETCH PRODUCTS
-  ======================================================= */
 
   useEffect(() => {
     let cancelled = false;

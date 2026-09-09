@@ -88,7 +88,7 @@ export default function Sidebar({
       <div className="px-4 mb-3">
         <button
           type="button"
-          onClick={onStartCertification}
+          onClick={() => window.open("https://www.bis.gov.in/fmcs/forms-and-formats/?lang=en", "_blank", "noopener,noreferrer")}
           className="w-full flex items-center justify-center gap-1.5 bg-[#0d234f] hover:bg-[#091837] text-white text-xs font-semibold rounded-full py-2.5 transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
