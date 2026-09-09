@@ -62,7 +62,7 @@ function App() {
   }
 />
 <Route
-  path="/verification"
+  path="/hallmarking"
   element={
     <ProtectedRoute>
       <Verification />

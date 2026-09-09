@@ -30,7 +30,7 @@ export function useSidebarNav() {
         break;
 
       case "huid":
-        navigate("/huid-verification");
+        navigate("/hallmarking");
         break;
 
       case "license":

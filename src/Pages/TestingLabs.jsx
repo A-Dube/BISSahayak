@@ -24,6 +24,7 @@ import "leaflet/dist/leaflet.css";
 import Sidebar from "../Components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useSidebarNav } from "../Utils/Navigation";
+import { useLanguage } from "../context/LanguageContext";
 import api from "../services/authService";
 
 /* =========================================================
@@ -66,6 +67,7 @@ function MapCenter({ position }) {
 export default function TestingLabs() {
   const onNavigate = useSidebarNav();
   const { logout } = useAuth();
+  const { t } = useLanguage();
 
   const [location, setLocation] = useState("");
   const [centres, setCentres] = useState([]);
@@ -94,6 +96,7 @@ export default function TestingLabs() {
       centre?.centreName ||
       centre?.centre_name ||
       centre?.title ||
+      t("testingLabsLabel") ||
       "BIS Centre"
     );
   };
@@ -103,6 +106,7 @@ export default function TestingLabs() {
       centre?.type ||
       centre?.centreType ||
       centre?.centre_type ||
+      t("testingLabsLabel") ||
       "BIS Centre"
     );
   };
@@ -112,6 +116,7 @@ export default function TestingLabs() {
       centre?.address ||
       centre?.fullAddress ||
       centre?.location?.address ||
+      t("notAvailable") ||
       "Address not available"
     );
   };
@@ -210,7 +215,7 @@ export default function TestingLabs() {
     const searchLocation = location.trim();
 
     if (!searchLocation) {
-      setError("Location is required");
+      setError(t("locationRequiredErr") || "Location is required");
       return;
     }
 
@@ -221,35 +226,14 @@ export default function TestingLabs() {
       setSelectedCentre(null);
       setUserPosition(null);
 
-      /* =================================================
-         STEP 1
-         POST /api/location/geocode
-
-         BACKEND EXPECTS:
-         {
-           query: "Ghaziabad"
-         }
-      ================================================= */
-
       const geoRes = await api.post("/location/geocode", {
         query: searchLocation,
       });
 
-      console.log("Geocode response:", geoRes.data);
-
-      /*
-        Backend controller returns:
-
-        {
-          success: true,
-          data: result
-        }
-      */
-
       const geoData = geoRes.data?.data;
 
       if (!geoData) {
-        throw new Error("Location data not found.");
+        throw new Error(t("noCentresSub") || "Location data not found.");
       }
 
       const latitude = Number(
@@ -266,21 +250,13 @@ export default function TestingLabs() {
         !Number.isFinite(latitude) ||
         !Number.isFinite(longitude)
       ) {
-        console.error("Invalid geocode data:", geoData);
-
         throw new Error(
-          "Unable to get coordinates for this location."
+          t("noCentresSub") || "Unable to get coordinates for this location."
         );
       }
 
       const position = [latitude, longitude];
-
       setUserPosition(position);
-
-      /* =================================================
-         STEP 2
-         GET /api/bis-centres
-      ================================================= */
 
       const centresRes = await api.get(
         "/bis-centres",
@@ -292,30 +268,6 @@ export default function TestingLabs() {
           },
         }
       );
-
-      console.log(
-        "BIS Centres response:",
-        centresRes.data
-      );
-
-      /*
-        Support possible backend responses:
-
-        {
-          success: true,
-          data: [...]
-        }
-
-        OR
-
-        {
-          centres: [...]
-        }
-
-        OR
-
-        [...]
-      */
 
       const responseData = centresRes.data;
 
@@ -341,21 +293,17 @@ export default function TestingLabs() {
 
       if (centreData.length === 0) {
         setError(
-          "No BIS centres found within 25 km of this location."
+          t("noCentresSub") || "No BIS centres found within 25 km of this location."
         );
       }
     } catch (err) {
-      console.error(
-        "Centre locator error:",
-        err
-      );
-
       setCentres([]);
       setUserPosition(null);
 
       setError(
         err?.response?.data?.message ||
           err?.message ||
+          t("noCentresSub") ||
           "Unable to find BIS centres for this location."
       );
     } finally {
@@ -382,10 +330,7 @@ export default function TestingLabs() {
   return (
     <div className="min-h-screen bg-neutral-50 flex font-sans">
 
-      {/* ===================================================
-          SIDEBAR
-      =================================================== */}
-
+      {/* SIDEBAR */}
       <Sidebar
         active="labs"
         onNavigate={onNavigate}
@@ -395,37 +340,27 @@ export default function TestingLabs() {
         onLogout={logout}
       />
 
-      {/* ===================================================
-          MAIN
-      =================================================== */}
-
+      {/* MAIN CONTENT */}
       <main className="flex-1 min-w-0 px-6 lg:px-10 py-8 overflow-y-auto">
 
         <div className="max-w-6xl mx-auto">
 
-          {/* =================================================
-              HEADER
-          ================================================= */}
-
+          {/* HEADER */}
           <div className="mb-8">
             <p className="text-sm font-medium text-emerald-600 mb-2">
-              Testing Labs
+              {t("testingLabsLabel") || "Testing Labs"}
             </p>
 
             <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
-              BIS Centre Locator
+              {t("centreLocatorTitle") || "BIS Centre Locator"}
             </h1>
 
             <p className="text-sm text-neutral-500 mt-2 max-w-2xl">
-              Find nearby BIS testing centres and
-              laboratories using your city or location.
+              {t("centreLocatorSub") || "Find nearby BIS testing centres and laboratories using your city or location."}
             </p>
           </div>
 
-          {/* =================================================
-              SEARCH
-          ================================================= */}
-
+          {/* SEARCH BOX */}
           <section className="bg-white border border-neutral-200 rounded-2xl p-5 mb-6 shadow-sm">
 
             <form
@@ -447,7 +382,7 @@ export default function TestingLabs() {
                       setError("");
                     }
                   }}
-                  placeholder="Enter city or location"
+                  placeholder={t("locationInputPlaceholder") || "Enter city or location"}
                   className="w-full h-12 pl-12 pr-10 bg-neutral-50 border border-neutral-200 rounded-xl text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                 />
 
@@ -472,12 +407,12 @@ export default function TestingLabs() {
                 {loading ? (
                   <>
                     <LoaderCircle className="w-4 h-4 animate-spin" />
-                    Finding...
+                    {t("findingBtn") || "Finding..."}
                   </>
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    Find Centres
+                    {t("findCentresBtn") || "Find Centres"}
                   </>
                 )}
 
@@ -493,34 +428,28 @@ export default function TestingLabs() {
 
           </section>
 
-          {/* =================================================
-              MAP + LIST
-          ================================================= */}
-
+          {/* MAP + LIST */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-            {/* =================================================
-                MAP
-            ================================================= */}
-
+            {/* MAP SECTION */}
             <section className="lg:col-span-3 bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
 
               <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between">
 
                 <div>
                   <h2 className="font-semibold text-neutral-900">
-                    Nearby BIS Centres
+                    {t("nearbyCentresMapTitle") || "Nearby BIS Centres"}
                   </h2>
 
                   <p className="text-xs text-neutral-500 mt-1">
-                    Showing centres within 25 km
+                    {t("showingCentresSub") || "Showing centres within 25 km"}
                   </p>
                 </div>
 
                 {userPosition && (
                   <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
                     <Navigation className="w-3.5 h-3.5" />
-                    Location found
+                    {t("locationFoundLabel") || "Location found"}
                   </div>
                 )}
 
@@ -545,18 +474,16 @@ export default function TestingLabs() {
                       position={userPosition}
                     />
 
-                    {/* USER LOCATION */}
-
+                    {/* USER LOCATION PIN */}
                     <Marker position={userPosition}>
                       <Popup>
                         <strong>
-                          Your searched location
+                          {t("searchedLocationPopup") || "Your searched location"}
                         </strong>
                       </Popup>
                     </Marker>
 
-                    {/* BIS CENTRES */}
-
+                    {/* BIS CENTRES MARKERS */}
                     {centres.map(
                       (centre, index) => {
                         const coordinates =
@@ -627,12 +554,11 @@ export default function TestingLabs() {
                     </div>
 
                     <h3 className="font-semibold text-neutral-900">
-                      Search for a location
+                      {t("searchLocationPlaceholderPrompt") || "Search for a location"}
                     </h3>
 
                     <p className="text-sm text-neutral-500 mt-1 text-center max-w-xs">
-                      Enter your city above to see
-                      nearby BIS centres on the map.
+                      {t("searchLocationPromptSub") || "Enter your city above to see nearby BIS centres on the map."}
                     </p>
 
                   </div>
@@ -643,28 +569,24 @@ export default function TestingLabs() {
 
             </section>
 
-            {/* =================================================
-                CENTRE LIST
-            ================================================= */}
-
+            {/* CENTRE LIST */}
             <section className="lg:col-span-2">
 
               <div className="flex items-center justify-between mb-4">
 
                 <div>
                   <h2 className="text-lg font-semibold text-neutral-900">
-                    Centre Details
+                    {t("centreDetailsTitle") || "Centre Details"}
                   </h2>
 
                   <p className="text-xs text-neutral-500 mt-1">
 
                     {centres.length > 0
-                      ? `${centres.length} centre${
-                          centres.length > 1
-                            ? "s"
-                            : ""
-                        } found`
-                      : "Search to find nearby centres"}
+                      ? (t("centresFoundCount", {
+                          count: centres.length,
+                          plural: centres.length > 1 ? "s" : "",
+                        }) || `${centres.length} centres found`)
+                      : (t("searchToFindNearby") || "Search to find nearby centres")}
 
                   </p>
                 </div>
@@ -714,7 +636,6 @@ export default function TestingLabs() {
                         >
 
                           {/* HEADER */}
-
                           <div className="flex items-start gap-3">
 
                             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
@@ -740,7 +661,6 @@ export default function TestingLabs() {
                           </div>
 
                           {/* ADDRESS */}
-
                           <div className="flex gap-2 mt-4">
 
                             <MapPin className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
@@ -789,8 +709,7 @@ export default function TestingLabs() {
 
                           </div>
 
-                          {/* CONTACT */}
-
+                          {/* CONTACT DETAILS */}
                           {(getPhone(
                             centre
                           ) ||
@@ -836,14 +755,13 @@ export default function TestingLabs() {
 
                           )}
 
-                          {/* SERVICES */}
-
+                          {/* SERVICES BADGES */}
                           {services.length > 0 && (
 
                             <div className="mt-4">
 
                               <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                                Services
+                                {t("servicesSubheading") || "Services"}
                               </p>
 
                               <div className="flex flex-wrap gap-1.5">
@@ -885,13 +803,11 @@ export default function TestingLabs() {
                     </div>
 
                     <h3 className="font-semibold text-neutral-900 text-sm">
-                      No centres to show
+                      {t("noCentresTitle") || "No centres to show"}
                     </h3>
 
                     <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
-                      Enter a city or location and click
-                      "Find Centres" to search nearby BIS
-                      facilities.
+                      {t("noCentresSub") || "Enter a city or location and click 'Find Centres' to search nearby BIS facilities."}
                     </p>
 
                   </div>

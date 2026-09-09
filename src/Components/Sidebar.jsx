@@ -40,7 +40,6 @@ export default function Sidebar({
   const NAV_ITEMS = [
     { key: "home", label: t("home"), icon: Home },
     { key: "assistant", label: t("assistant"), icon: MessageSquare },
-    { key: "standards", label: t("standards"), icon: FileText },
     { key: "certification", label: t("certification"), icon: CheckCircle2 },
     { key: "labs", label: t("labs"), icon: FlaskConical },
     { key: "hallmarking", label: t("hallmarking"), icon: Award },
@@ -234,14 +233,14 @@ export default function Sidebar({
           <User className="w-4 h-4" />
           {t("profile")}
         </button>
-        <button
+        {/* <button
           type="button"
           onClick={() => onNavigate?.("help")}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 transition-colors cursor-pointer"
         >
           <HelpCircle className="w-4 h-4" />
           {t("help")}
-        </button>
+        </button> */}
         <button
           type="button"
           onClick={onLogout}
