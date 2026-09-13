@@ -274,7 +274,7 @@ export default function StandardsPage() {
 
                 {/* HELP TEXT */}
 
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                   <InfoCard
                     title="Search by product"
                     description="Example: helmets, cement, water purifier"
@@ -285,10 +285,7 @@ export default function StandardsPage() {
                     description="Example: IS 4151:2015"
                   />
 
-                  <InfoCard
-                    title="Search by requirement"
-                    description="Example: safety standards for helmets"
-                  />
+                   
                 </div>
               </div>
             </section>
