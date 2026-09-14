@@ -123,7 +123,7 @@ export default function Home() {
       icon: LucideGrid2X2,
       title: t("verifyHuidTitle"),
       desc: t("verifyHuidDesc"),
-      path: "/hallmarking/verify",
+      path: "/hallmarking",
     },
     {
       key: "check-is-mark",

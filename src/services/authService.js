@@ -138,7 +138,7 @@ api.interceptors.response.use(
         typeof window !== "undefined" &&
         window.location.pathname !== "/"
       ) {
-        window.location.href = "/";
+        window.location.href = "/home";
       }
 
       return Promise.reject(refreshError);
